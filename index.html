@@ -364,7 +364,15 @@
           <li><b>Decimator</b> updated 10% → 20% (its Vulnerable-damage portion only — the Overpower-damage half of this node isn't modeled since Overpower itself is out of this tool's scope).</li>
           <li><b>Call of the Ancients</b> is off by default and flagged unverified — it isn't part of the current mainline Season 14 Whirlwind setup, and its exact current value wasn't confirmed against a live tooltip.</li>
         </ul>
+        <b>v6 guide cross-check (Aug 2026):</b> checked against Maxroll's live Season 14 "Death Awakening" Whirlwind endgame guide text (its Equipment/Skills/Paragon/FAQ sections; the interactive gear-planner and Paragon-board widgets on that page render as images/canvas and couldn't be read).
+        <ul>
+          <li>Confirms <b>Gohr's Devastating Grips, Tuskhelm of Joritz the Mighty, and Ramaladni's Magnum Opus</b> as the standard endgame Mythic/Unique trio, and <b>Wrath of the Berserker</b> as run "on cooldown" for effectively 100% uptime — see the preset button below.</li>
+          <li>Confirms <b>Ring of Starless Skies</b> is currently framed as a Resource/survivability pick rather than a core damage stacker, and <b>Call of the Ancients</b> isn't mentioned at all — both stay off by default, now with more confidence.</li>
+          <li>Added <b>Aspect of Anger Management</b> below, off by default: the guide calls it an important damage multiplier and recommends Transfiguring it onto your Amulet, but doesn't give a number — enter your own tooltip value if you use it.</li>
+          <li>No numeric values for Paragon legendary nodes were recoverable (widget content, not text) — Section 3's additive rows and the gear-slot affixes in Advanced Mode are still where those belong; enter them from your own board.</li>
+        </ul>
       </div>
+      <button class="btn-gold" id="applyKitBtn" type="button" style="margin-bottom:14px;">★ Apply Standard S14 Whirlwind Kit</button>
       <div class="dyn-list" id="multList"></div>
       <button class="add-row" id="addMultBtn" type="button">+ Add Multiplier</button>
       <div class="subtotal"><span>Combined multiplicative factor (checked only)</span><b id="multTotal">×1.00</b></div>
@@ -557,7 +565,19 @@
     {name:"Call of the Ancients (unverified, non-default S14)", pct: 10, on: false},
     {name:"Blood Rage (Paragon Legendary node)", pct: 0, on: false, special:'bloodrage'},
     {name:"Decimator (Vulnerable dmg portion only)", pct: 20, on: false},
+    {name:"Aspect of Anger Management (unverified value)", pct: 0, on: false},
   ];
+
+  // "Standard S14 Whirlwind Kit" preset — see the v6 guide cross-check caveat above.
+  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips","Tuskhelm of Joritz the Mighty"];
+  const STANDARD_KIT_OFF = ["Ring of Starless Skies","Call of the Ancients (unverified, non-default S14)","Blood Rage (Paragon Legendary node)","Decimator (Vulnerable dmg portion only)","Aspect of Anger Management (unverified value)"];
+  function applyStandardKit(){
+    mults.forEach(m => {
+      if (STANDARD_KIT_ON.includes(m.name)) m.on = true;
+      else if (STANDARD_KIT_OFF.includes(m.name)) m.on = false;
+    });
+    renderMults(); compute();
+  }
 
   // Resolve a mult row's effective pct, computing "special" rows live.
   function resolveMultPct(m){
@@ -642,6 +662,7 @@
     list.querySelectorAll('[data-role=rossStacks]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].stacks = clamp(parseFloat(e.target.value)||0,0,5); renderMults(); compute(); }));
   }
   $('addMultBtn').addEventListener('click', () => { mults.push({name:"New Multiplier", pct:10, on:true}); renderMults(); compute(); });
+  $('applyKitBtn').addEventListener('click', applyStandardKit);
 
   function basicState(){
     const wpCategory = $('wpCategory').value;
