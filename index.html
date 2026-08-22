@@ -305,19 +305,9 @@
     <section class="card">
       <div class="card-head"><h2>Scenario</h2><div class="sub">what you're measuring against</div></div>
       <div class="card-body">
-        <div class="grid g2" style="margin-bottom:14px;">
-          <div class="field">
-            <label for="vulnUptime">Vulnerable uptime <output id="vulnOut">90%</output></label>
-            <div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"></div>
-          </div>
-          <div class="field">
-            <label>Target</label>
-            <div class="seg" role="group" aria-label="Target type">
-              <button type="button" data-target="normal">Normal</button>
-              <button type="button" data-target="elite">Elite</button>
-              <button type="button" data-target="boss">Boss</button>
-            </div>
-          </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="vulnUptime">Vulnerable uptime <output id="vulnOut">90%</output></label>
+          <div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"></div>
         </div>
         <div class="chips" id="condChips"></div>
         <div class="hint mt">Conditional damage stats below activate automatically from these. <strong>Close</strong> is always on — Whirlwind is melee.</div>
@@ -539,8 +529,6 @@ const CONDITIONS = {
   berserk:    {label:'Berserking',      chip:'You are Berserking'},
   fortified:  {label:'Fortified',       chip:'You are Fortified'},
   healthy:    {label:'Healthy',         chip:'You are Healthy'},
-  elite:      {label:'Elite',           fromTarget:t => t === 'elite' || t === 'boss'},
-  boss:       {label:'Boss',            fromTarget:t => t === 'boss'},
   cc:         {label:'Crowd controlled', chip:'Target is crowd controlled'},
   injured:    {label:'Injured target',  chip:'Target is Injured'},
 };
@@ -554,8 +542,6 @@ const STAT_DEFS = [
   {key:'berserk',    label:'While Berserking',       cond:'berserk',    common:true},
   {key:'critDmg',    label:'Critical Strike Damage', cond:'critOnly',   common:true, special:'crit'},
   {key:'vulnDmg',    label:'Vulnerable damage',      cond:'vulnerable', common:true, special:'vuln'},
-  {key:'elite',      label:'Damage to Elites',       cond:'elite'},
-  {key:'boss',       label:'Damage to Bosses',       cond:'boss'},
   {key:'cc',         label:'To crowd controlled',    cond:'cc'},
   {key:'injured',    label:'To Injured enemies',     cond:'injured'},
   {key:'fortified',  label:'While Fortified',        cond:'fortified'},
@@ -667,10 +653,10 @@ function resolveGearPower(p){
 
 // Sample build - clearly a sample, loadable/clearable, not presented as truth.
 const SAMPLE = {
-  skillPct:60, strPer10:9.09, activeWeapon:'w2h_blunt', vulnUptime:90, target:'elite',
+  skillPct:60, strPer10:9.09, activeWeapon:'w2h_blunt', vulnUptime:90,
   conds:{berserk:true, fortified:true, healthy:true, cc:false, injured:false},
   stats:{physical:500, core:0, whirlwind:0, close:350, berserk:300, critDmg:410, vulnDmg:450,
-         elite:0, boss:0, cc:0, injured:0, fortified:0, healthy:0},
+         cc:0, injured:0, fortified:0, healthy:0},
   strength:2500, critChance:80, as1:0, as2:0,
   gear:{
     helm:{name:'Tuskhelm of Joritz the Mighty', mythic:true, power:{id:'tuskhelm'}},
@@ -704,7 +690,7 @@ function blankStats(){
 function blankBuild(){
   return {
     skillPct:60, strPer10:9.09, activeWeapon:'w2h_blunt',
-    vulnUptime:90, target:'normal',
+    vulnUptime:90,
     conds:{berserk:false, fortified:false, healthy:false, cc:false, injured:false},
     strength:0, critChance:0, as1:0, as2:0,
     stats:blankStats(), gear:blankGear(), mults:defaultMultipliers(),
@@ -719,7 +705,7 @@ function loadSample(){
   const s = JSON.parse(JSON.stringify(SAMPLE));
   const b = blankBuild();
   b.skillPct = s.skillPct; b.strPer10 = s.strPer10;
-  b.activeWeapon = s.activeWeapon; b.vulnUptime = s.vulnUptime; b.target = s.target;
+  b.activeWeapon = s.activeWeapon; b.vulnUptime = s.vulnUptime;
   Object.assign(b.conds, s.conds);
   Object.assign(b.stats, s.stats);
   b.strength = s.strength; b.critChance = s.critChance;
@@ -752,7 +738,6 @@ function conditionMet(cond, b){
   const def = CONDITIONS[cond];
   if (!def) return true;
   if (def.auto) return true;
-  if (def.fromTarget) return def.fromTarget(b.target);
   if (def.probabilistic) return true;         // handled in the outcome matrix
   return !!b.conds[cond];
 }
@@ -869,8 +854,6 @@ function validate(b, r){
     const berserkMult = b.mults.some(m => m.on && m.cond === 'berserk');
     if (berserkStat || berserkMult) out.push({k:'info', t:'Berserking is off in Scenario, so your Berserking damage stat and multipliers are excluded.'});
   }
-  if (b.target === 'normal' && (num(r.totals.stats.elite) || num(r.totals.stats.boss)))
-    out.push({k:'info', t:'Target is Normal, so Elite and Boss damage stats are excluded.'});
   const unver = b.mults.filter(m => m.on && m.prov === 'unverified' && resolveMult(m) > 0);
   if (unver.length) out.push({k:'warn', t:'Using unverified values for: ' + unver.map(m=>m.name).join(', ') + '. Confirm against your in-game tooltip.'});
   const dualWithTwoHander = r.speedClass === 'dual' && (b.activeWeapon === 'w2h_blunt' || b.activeWeapon === 'w2h_slash');
@@ -898,7 +881,6 @@ function render(){
   $('plainHit').textContent = fmt(r.hits.nc);
   $('apsOut').textContent = r.aps.toFixed(3);
   const condBits = [];
-  if (build.target !== 'normal') condBits.push(build.target);
   Object.keys(build.conds).forEach(k => { if (build.conds[k]) condBits.push(CONDITIONS[k].label.toLowerCase()); });
   $('dpsNote').textContent = condBits.length ? 'vs ' + condBits.join(' · ') : 'vs a normal enemy';
   const sc = SPEED_CLASSES.find(c => c.v === r.speedClass);
@@ -969,21 +951,9 @@ function renderChips(){
   });
 }
 
-function renderTargetSeg(){
-  document.querySelectorAll('[data-target]').forEach(btn => {
-    btn.setAttribute('aria-pressed', build.target === btn.dataset.target ? 'true' : 'false');
-    if (btn.dataset.bound) return;
-    btn.dataset.bound = '1';
-    btn.addEventListener('click', () => {
-      build.target = btn.dataset.target;
-      renderTargetSeg(); renderStats(); renderMults(); scheduleRender();
-    });
-  });
-}
-
 function statRowHTML(s){
   // Inactive rows are dimmed rather than tagged: the label already names the
-  // condition ("While Berserking", "Damage to Elites"), so a tag just repeats it.
+  // condition ("While Berserking", "To crowd controlled"), so a tag just repeats it.
   const active = s.special || s.cond === 'vulnerable' || conditionMet(s.cond, build);
   const title = active ? '' : ' title="Not active in the current scenario — excluded from the total."';
   return '<div class="statrow'+(active?'':' inactive')+'"'+title+'>' +
@@ -1265,7 +1235,7 @@ function syncInputs(){
   $('vulnOut').textContent = num(build.vulnUptime) + '%';
 }
 function renderAll(){
-  renderWeaponSelect(); renderChips(); renderTargetSeg();
+  renderWeaponSelect(); renderChips();
   renderStats(); renderMults(); renderSlotEditors(); render();
 }
 
