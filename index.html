@@ -452,7 +452,8 @@
     <div class="hint">
       <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Damage-bucket structure was cross-referenced against multiple damage guides: Critical Strike Damage and Vulnerable Damage bonuses are <em>additive</em> into the same bucket as your other <code>+%</code> stats, while the base Critical (<code>×1.5</code>) and Vulnerable (<code>×1.2</code>) effects are separate fixed multipliers. Strength is its own multiplicative bucket. The engine implements exactly this.</p>
       <p style="margin:0 0 9px;"><strong>Fixed this pass.</strong> A Unique/Mythic item's power used to live in a separate Multipliers row with no connection to whether the item was actually equipped — equipping Ramaladni's Magnum Opus or Ring of Starless Skies on a gear slot did nothing unless you separately found and enabled a same-named row elsewhere, and the shipped sample build itself demonstrated this (both were "equipped" but contributed zero damage). Each known Unique/Mythic power now lives directly on its gear slot's editor — selecting it there is what applies it, and its live value is shown on the paperdoll slot itself. A second bug was fixed alongside it: loading the sample build handed out live references to its arrays/objects, so editing a loaded sample would silently corrupt the built-in sample for the rest of the session.</p>
-      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. The four gear-bound Unique/Mythic values (Ramaladni's Magnum Opus, Ring of Starless Skies, Gohr's, Tuskhelm) and the Berserking/Wrath of the Berserker multipliers carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips this pass — check each against your own game. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
+      <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Ramaladni's Magnum Opus was checked against its live tooltip (fextralife, 2026-08-22): "Skills using this weapon deal [0.35–0.50]% increased damage per point of Fury you have, but you lose 10 Fury every second." The engine's <code>maxFury × %perFury</code> formula matches; the two inputs now default to the midpoint of the confirmed roll range and are clamped to it. The Fury-drain clause isn't modeled as a rotational mechanic — "Max Fury" is still a static stand-in for sustained Fury, same simplification as before, just now on a confirmed base number.</p>
+      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. The remaining gear-bound Unique/Mythic values (Ring of Starless Skies, Gohr's, Tuskhelm) and the Berserking/Wrath of the Berserker multipliers carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips this pass — check each against your own game. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
       <p style="margin:0;"><strong>Why not more.</strong> This build ran without network access to Diablo databases and build-planner sites, so per-item affix values, Paragon node values, and glyph scaling could not be pulled. Anything item-specific has to come off your own character sheet. Nothing here is invented to fill a gap — where a number is unknown it is 0 and flagged.</p>
     </div>
   </div>
@@ -602,7 +603,13 @@ const AFFIX_CATS = [
 // what turns the math on, not a same-named row somewhere else in the UI.
 const KNOWN_UNIQUES = {
   none:     {name:'— none / generic item —'},
-  rmo:      {name:"Ramaladni's Magnum Opus", prov:'community', special:'rmo'},
+  // Verified against live tooltip (fextralife, checked 2026-08-22): "Skills using
+  // this weapon deal [0.35-0.50]% increased damage per point of Fury you have,
+  // but you lose 10 Fury every second." Range is the item's affix roll, not a
+  // fixed value - user still tunes it per their own roll. Fury drain isn't
+  // separately modeled; "Max Fury" here stands in for sustained Fury during the
+  // fight, same simplification as before.
+  rmo:      {name:"Ramaladni's Magnum Opus", prov:'game', special:'rmo'},
   ross:     {name:'Ring of Starless Skies',  prov:'community', special:'ross'},
   gohrs:    {name:"Gohr's Devastating Grips",prov:'community', flat:82},
   tuskhelm: {name:'Tuskhelm of Joritz the Mighty', prov:'community', flat:42},
@@ -1063,8 +1070,8 @@ function powerFieldHTML(s, g){
   if (def && def.special === 'rmo'){
     sub = '<div class="grid g2" style="margin-top:8px;">' +
       '<div class="field"><label for="pw-fury-'+s.id+'">Max Fury</label><input type="number" id="pw-fury-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-maxFury" value="'+num(p.maxFury)+'" min="0"></div>' +
-      '<div class="field"><label for="pw-per-'+s.id+'">% per Fury</label><input type="number" id="pw-per-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-perFury" value="'+num(p.perFury)+'" min="0" max="1" step="0.005"></div>' +
-      '</div><div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(1)+'% — check against your own tooltip.</div>';
+      '<div class="field"><label for="pw-per-'+s.id+'">% per Fury</label><input type="number" id="pw-per-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-perFury" value="'+num(p.perFury)+'" min="0.35" max="0.50" step="0.005"></div>' +
+      '</div><div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(1)+'% <span class="prov prov-game" title="Verified against live tooltip"></span> — confirmed roll range is 0.35–0.50% per point of Fury (fextralife, checked 2026-08-22); enter your own roll. Fury drain (−10/sec) isn\'t separately modeled — Max Fury stands in for sustained Fury during the fight.</div>';
   } else if (def && def.special === 'ross'){
     sub = '<div class="field" style="margin-top:8px;max-width:160px;"><label for="pw-stacks-'+s.id+'">Stacks (0–5)</label>' +
       '<input type="number" id="pw-stacks-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-stacks" value="'+num(p.stacks)+'" min="0" max="5" step="1"></div>' +
