@@ -3,1180 +3,1204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Whirlwind Damage Reckoner v5 — Diablo 4</title>
+<title>Whirlwind Damage Calculator — Diablo IV</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --void:#0e0c0a; --iron:#171310; --panel:#1c1713; --panel-2:#231c17;
-    --hairline:#4a3b28; --gold:#a9803f; --gold-bright:#d4af6a;
-    --bone:#d9cdb8; --bone-dim:#8f8574; --blood:#8f2323; --blood-bright:#c93f3f;
-    --ember:#c9622a; --ember-bright:#f2913f; --steel:#5c6a72; --sage:#5e8a6e;
-    --sage-text:#7fbf90; --blood-text:#e8706a;
+    --bg:#0d0c0b; --surface:#161412; --surface-2:#1e1b18; --surface-3:#272320;
+    --line:#3a332b; --line-soft:#2b2621;
+    /* text-faint is used for real content (hints, captions, labels), so it clears
+       WCAG AA 4.5:1 on every surface above - not decorative-only grey. */
+    --text:#e6ded0; --text-dim:#a89b89; --text-faint:#9a8e7d;
+    --gold:#c9a464; --gold-dim:#96793f;
+    --ember:#f2913f; --ember-dim:#c9622a;
+    --green:#7fbf90; --red:#e8706a; --violet:#c79ee8; --blue:#7fa8d0;
+    --radius:6px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:
-      radial-gradient(ellipse 900px 500px at 50% -10%, #241a10 0%, transparent 60%),
-      radial-gradient(ellipse 700px 400px at 100% 100%, #1a0e0c 0%, transparent 55%),
-      var(--void);
-    color:var(--bone); font-family:'Inter',sans-serif; min-height:100vh; padding:32px 16px 80px;
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:14px; line-height:1.5;
+    min-height:100vh; padding:0 0 60px;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:960px;margin:0 auto;}
-  header{text-align:center;margin-bottom:28px;}
-  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);opacity:.85;margin-bottom:10px;}
-  h1{
-    font-family:'Cinzel',serif;font-weight:900;font-size:clamp(26px,5vw,42px);margin:0 0 10px;letter-spacing:.02em;
-    background:linear-gradient(180deg,var(--gold-bright) 0%, var(--gold) 55%, #7a5a2c 100%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(212,175,106,.15);
-  }
-  .sub{color:var(--bone-dim);font-size:14px;max-width:620px;margin:0 auto;line-height:1.55;}
-  .rule{width:120px;height:1px;margin:20px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  h1,h2,h3{margin:0;}
+  button{font-family:inherit;}
 
-  /* ---- Mode tabs ---- */
-  .tabs{display:flex;gap:8px;justify-content:center;margin-bottom:26px;}
-  .tab-btn{
-    font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:.06em;
-    background:var(--panel);border:1px solid var(--hairline);color:var(--bone-dim);
-    padding:11px 22px;border-radius:2px;cursor:pointer;transition:all .15s;
+  /* ---------- header ---------- */
+  .topbar{
+    border-bottom:1px solid var(--line-soft); background:linear-gradient(180deg,#171412,#111010);
+    padding:16px 20px; margin-bottom:22px;
   }
-  .tab-btn.active{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--void);border-color:var(--gold);}
-  .tab-btn:not(.active):hover{border-color:var(--gold);color:var(--gold-bright);}
-  .mode-panel{display:none;}
-  .mode-panel.active{display:block;}
+  .topbar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .brand{font-family:'Cinzel',serif;font-weight:700;font-size:19px;color:var(--gold);letter-spacing:.01em;white-space:nowrap;}
+  .brand span{color:var(--text-faint);font-family:'Inter';font-weight:400;font-size:12px;margin-left:8px;letter-spacing:0;}
+  .topbar-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
 
-  .panel{
-    background:linear-gradient(180deg,var(--panel) 0%, var(--iron) 100%);
-    border:1px solid var(--hairline);border-radius:2px;padding:22px 24px 26px;margin-bottom:22px;position:relative;
-  }
-  .panel::before,.panel::after{content:"";position:absolute;width:9px;height:9px;border:1px solid var(--gold);opacity:.55;}
-  .panel::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
-  .panel::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
-  .panel-title{
-    font-family:'Cinzel',serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--gold-bright);display:flex;align-items:center;gap:10px;margin:0 0 6px;
-  }
-  .panel-title .num{
-    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--void);background:var(--gold);
-    width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
-  }
-  .panel-title .line{flex:1;height:1px;background:linear-gradient(90deg,var(--hairline),transparent);}
-  .panel-desc{font-size:12.5px;color:var(--bone-dim);line-height:1.6;margin:0 0 18px;}
-  .panel-desc b{color:var(--gold-bright);font-weight:600;}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 20px;}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start;}
+  @media(max-width:1040px){.layout{grid-template-columns:1fr;}}
 
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
-  .grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
-  @media(max-width:600px){.grid,.grid.cols-3{grid-template-columns:1fr 1fr;}}
-  .field{display:flex;flex-direction:column;gap:6px;}
-  .field.span2{grid-column:span 2;}
-  label{font-size:11.5px;color:var(--bone-dim);letter-spacing:.03em;display:flex;justify-content:space-between;align-items:baseline;}
-  label .hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);}
+  /* ---------- cards ---------- */
+  .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
+  .card-head{
+    display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft);
+    background:var(--surface-2);
+  }
+  .card-head h2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text);}
+  .card-head .sub{margin-left:auto;font-size:11.5px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;}
+  .card-body{padding:16px;}
 
+  /* ---------- form controls ---------- */
+  .grid{display:grid;gap:12px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:720px){.g3,.g4{grid-template-columns:1fr 1fr;}}
+  @media(max-width:420px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+  .field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .field>label{font-size:11.5px;color:var(--text-dim);font-weight:500;display:flex;align-items:center;gap:5px;}
   input[type=number],input[type=text],select{
-    background:var(--void);border:1px solid var(--hairline);color:var(--bone);
-    font-family:'JetBrains Mono',monospace;font-size:13.5px;padding:9px 10px;border-radius:2px;width:100%;
-    transition:border-color .15s, box-shadow .15s;
+    background:var(--bg);border:1px solid var(--line);color:var(--text);
+    font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px 10px;border-radius:4px;width:100%;
+    transition:border-color .12s, box-shadow .12s;
   }
-  select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 16px) center, calc(100% - 11px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:28px;}
-  input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(169,128,63,.18);}
-  input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--hairline);border-radius:4px;outline:none;}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--gold-bright);border:2px solid var(--void);cursor:pointer;box-shadow:0 0 8px rgba(212,175,106,.5);}
-  .slider-row{display:flex;align-items:center;gap:12px;}
-  .slider-row input[type=range]{flex:1;}
-  .slider-val{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold-bright);min-width:48px;text-align:right;}
-
-  input[type=checkbox]{accent-color:var(--ember);cursor:pointer;}
-
-  /* dynamic rows */
-  .dyn-list{display:flex;flex-direction:column;gap:8px;}
-  .dyn-row{
-    display:grid;grid-template-columns:28px 1fr 80px 32px;gap:8px;align-items:center;
-    background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;padding:7px 9px;
+  input[type=text]{font-family:'Inter',sans-serif;}
+  select{
+    appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:28px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--text-dim) 50%),linear-gradient(135deg,var(--text-dim) 50%,transparent 50%);
+    background-position:calc(100% - 15px) center,calc(100% - 10px) center;background-size:5px 5px;background-repeat:no-repeat;
   }
-  .dyn-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--ember);cursor:pointer;}
-  .dyn-row input[type=text]{background:transparent;border:none;padding:2px 0;font-family:'Inter';font-size:13px;}
-  .dyn-row input[type=text]:focus{box-shadow:none;border-bottom:1px solid var(--gold);}
-  .pct-wrap{display:flex;align-items:center;gap:2px;}
-  .dyn-row input[type=number]{padding:6px 6px;font-size:13px;text-align:right;}
-  .dyn-remove{background:none;border:none;color:var(--bone-dim);cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:2px;transition:color .15s, background .15s;}
-  .dyn-remove:hover{color:var(--blood-bright);background:rgba(143,35,35,.15);}
-  .add-row{margin-top:12px;background:none;border:1px dashed var(--hairline);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.05em;padding:9px;border-radius:2px;cursor:pointer;width:100%;transition:all .15s;}
-  .add-row:hover{border-color:var(--gold);background:rgba(169,128,63,.08);color:var(--gold-bright);}
-  .subtotal{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);display:flex;justify-content:space-between;border-top:1px solid var(--hairline);padding-top:12px;}
-  .subtotal b{color:var(--gold-bright);font-weight:600;}
-  .cat-tag{
-    font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;
-    padding:2px 6px;border-radius:8px;border:1px solid var(--hairline);color:var(--bone-dim);white-space:nowrap;
-  }
+  input:focus,select:focus,button:focus-visible{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,164,100,.16);}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  input[type=checkbox]{accent-color:var(--ember);cursor:pointer;width:15px;height:15px;flex:none;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--line);border-radius:3px;outline:none;padding:0;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer;}
+  .slider-row{display:flex;align-items:center;gap:10px;}
+  .slider-row output{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--gold);min-width:40px;text-align:right;}
 
-  /* dynamic-row special sub-fields (e.g. RMO Max Fury, Ring stacks) */
-  .dyn-special{
-    grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;
-    border-top:1px dashed var(--hairline);margin-top:7px;padding-top:8px;
+  .btn{
+    background:var(--surface-3);border:1px solid var(--line);color:var(--text);
+    font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:4px;cursor:pointer;
+    transition:border-color .12s,background .12s;white-space:nowrap;
   }
-  .dyn-special .mini-field{display:flex;flex-direction:column;gap:4px;min-width:110px;}
-  .dyn-special .mini-field label{font-size:10px;}
-  .dyn-special .mini-field input{padding:6px 8px;font-size:12px;}
-  .dyn-special .computed{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gold-bright);margin-left:auto;white-space:nowrap;}
+  .btn:hover{border-color:var(--gold-dim);background:#302a25;}
+  .btn-primary{background:linear-gradient(180deg,#d8b06e,#b08a43);border-color:#d8b06e;color:#17130d;font-weight:600;}
+  .btn-primary:hover{filter:brightness(1.07);background:linear-gradient(180deg,#d8b06e,#b08a43);}
+  .btn-sm{padding:5px 9px;font-size:11.5px;}
+  .btn-icon{background:none;border:1px solid var(--line);color:var(--text-dim);width:26px;height:26px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;padding:0;}
+  .btn-icon:hover{border-color:var(--gold-dim);color:var(--gold);}
 
-  /* ---- gear slots (advanced mode) ---- */
-  .gear-slot{
-    background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;margin-bottom:12px;overflow:hidden;
+  /* ---------- segmented control ---------- */
+  .seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:2px;gap:2px;}
+  .seg button{
+    background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:500;
+    padding:6px 13px;border-radius:3px;cursor:pointer;transition:background .12s,color .12s;
   }
-  .gear-slot summary{
-    cursor:pointer;list-style:none;padding:13px 16px;display:flex;align-items:center;gap:10px;
-    font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--gold-bright);
+  .seg button[aria-pressed=true]{background:var(--surface-3);color:var(--gold);}
+  .seg button:hover:not([aria-pressed=true]){color:var(--text);}
+
+  /* ---------- toggle chips (scenario) ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);
+    color:var(--text-dim);font-size:12px;padding:6px 11px;border-radius:20px;cursor:pointer;
+    transition:border-color .12s,color .12s,background .12s;user-select:none;
   }
-  .gear-slot summary::-webkit-details-marker{display:none;}
-  .gear-slot summary::before{content:"▸";color:var(--gold);font-size:11px;transition:transform .15s;}
-  .gear-slot[open] summary::before{transform:rotate(90deg);}
-  .gear-slot summary .slot-sub{font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--bone-dim);margin-left:auto;text-transform:none;letter-spacing:0;}
-  .gear-slot-body{padding:4px 16px 16px;border-top:1px solid var(--hairline);}
-  .gear-name-field{margin:12px 0 14px;}
-  .gear-mythic-field{margin:0 0 14px;font-size:12.5px;color:var(--bone);}
-  .gear-mythic-field .hint{display:block;margin-top:2px;}
-  .weapon-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
-  @media(max-width:600px){.weapon-fields{grid-template-columns:1fr 1fr;}}
+  .chip:hover{border-color:var(--gold-dim);color:var(--text);}
+  .chip[aria-pressed=true]{background:rgba(201,164,100,.13);border-color:var(--gold-dim);color:var(--gold);}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex:none;}
+  .chip[aria-pressed=true] .dot{background:var(--gold);}
 
-  .affix-row{
-    display:grid;grid-template-columns:24px 1fr 74px 128px 30px;gap:8px;align-items:center;
-    background:var(--iron);border:1px solid var(--hairline);border-radius:2px;padding:7px 8px;margin-bottom:8px;
+  /* ---------- provenance dots ---------- */
+  .prov{
+    display:inline-flex;align-items:center;justify-content:center;width:6px;height:6px;border-radius:50%;
+    flex:none;cursor:help;
   }
-  @media(max-width:640px){.affix-row{grid-template-columns:24px 1fr 60px 30px;grid-template-areas:"chk name val rm" "chk cat cat cat";}
-    .affix-row input[type=checkbox]{grid-area:chk;} .affix-row input[type=text]{grid-area:name;} .affix-row .pct-wrap{grid-area:val;} .affix-row select{grid-area:cat;} .affix-row .dyn-remove{grid-area:rm;}}
-  @media(max-width:420px){
-    .weapon-fields{grid-template-columns:1fr;}
-    .dyn-row{grid-template-columns:24px 1fr 66px 28px;padding:6px 7px;}
-    .panel{padding:16px 14px 18px;}
-    .adv-summary{grid-template-columns:repeat(2,1fr);}
-    .result-strip{grid-template-columns:repeat(2,1fr);}
+  .prov-game{background:var(--green);}
+  .prov-table{background:var(--blue);}
+  .prov-community{background:var(--gold);}
+  .prov-unverified{background:var(--red);}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--text-faint);align-items:center;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+
+  /* ---------- stat rows ---------- */
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px 16px;}
+  .statrow{display:flex;align-items:center;gap:10px;min-width:0;}
+  .statrow label{flex:1;font-size:12px;color:var(--text-dim);min-width:0;}
+  .statrow input{width:80px;flex:none;text-align:right;padding:6px 8px;font-size:12.5px;}
+  .statrow.inactive label{opacity:.45;}
+  .statrow.inactive input{opacity:.5;}
+
+  /* ---------- multiplier rows ---------- */
+  .mrow{
+    display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;
+    padding:9px 11px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:5px;margin-bottom:7px;
   }
-  .affix-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--ember);}
-  .affix-row input[type=text]{background:transparent;border:none;font-size:12.5px;padding:2px 0;}
-  .affix-row input[type=text]:focus{box-shadow:none;border-bottom:1px solid var(--gold);}
-  .affix-row input[type=number]{padding:5px;font-size:12.5px;text-align:right;}
-  .affix-row select{font-size:11px;padding:6px 22px 6px 8px;}
-  .add-affix{
-    background:none;border:1px dashed var(--hairline);color:var(--gold);font-family:'JetBrains Mono',monospace;
-    font-size:11px;padding:7px;border-radius:2px;cursor:pointer;width:100%;margin-top:2px;
-  }
-  .add-affix:hover{border-color:var(--gold);color:var(--gold-bright);}
+  .mrow.off{opacity:.55;}
+  .mrow.blocked{opacity:.4;}
+  .mrow .mname{font-size:12.5px;display:flex;align-items:center;gap:6px;min-width:0;}
+  .mrow .mname .why{font-size:10.5px;color:var(--text-faint);}
+  .mrow input[type=number]{width:74px;text-align:right;padding:6px 8px;font-size:12.5px;}
+  .mrow .mval{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--gold);width:74px;text-align:right;}
+  .msub{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding-top:9px;margin-top:2px;border-top:1px dashed var(--line-soft);}
+  .msub .field{min-width:104px;}
+  .msub .field>label{font-size:10.5px;}
+  .msub .field input{padding:5px 8px;font-size:12px;}
+  .msub .note{font-size:11px;color:var(--text-faint);align-self:center;margin-left:auto;font-family:'JetBrains Mono',monospace;}
 
-  .adv-summary{
-    display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hairline);
-    border:1px solid var(--hairline);border-radius:2px;overflow:hidden;margin-top:4px;
-  }
-  @media(max-width:700px){.adv-summary{grid-template-columns:repeat(3,1fr);}}
-  .adv-summary .cell{background:var(--iron);padding:11px 6px;text-align:center;}
-  .adv-summary .cell .v{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold-bright);font-weight:700;}
-  .adv-summary .cell .l{font-size:9.5px;color:var(--bone-dim);margin-top:3px;letter-spacing:.02em;}
-
-  /* ---- Results ---- */
-  .results{
-    background:radial-gradient(ellipse 500px 200px at 50% 0%, rgba(201,98,42,.10), transparent 70%), linear-gradient(180deg,#1a1310 0%, var(--void) 100%);
-    border:1px solid var(--gold);border-radius:2px;padding:30px 26px 26px;text-align:center;margin-bottom:22px;position:relative;overflow:hidden;
-  }
-  .results::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg, transparent 0 40px, rgba(212,175,106,.02) 40px 41px);pointer-events:none;}
-  .headline{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(38px,7vw,58px);line-height:1;color:var(--ember-bright);text-shadow:0 0 30px rgba(242,145,63,.35), 0 0 70px rgba(242,145,63,.15);margin:6px 0 4px;transition:transform .25s ease;}
-  .headline.pulse{transform:scale(1.035);}
-  .headline-label{font-size:12.5px;color:var(--bone-dim);letter-spacing:.08em;text-transform:uppercase;}
-  .result-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hairline);margin-top:22px;border:1px solid var(--hairline);border-radius:2px;overflow:hidden;}
-  @media(max-width:600px){.result-strip{grid-template-columns:repeat(2,1fr);}}
-  .result-cell{background:var(--iron);padding:14px 8px;}
-  .result-cell .v{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold-bright);font-weight:700;}
-  .result-cell .l{font-size:10.5px;color:var(--bone-dim);margin-top:4px;letter-spacing:.03em;}
-  .breakdown{margin-top:24px;text-align:left;}
-  .bk-row{margin-bottom:12px;}
-  .bk-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
-  .bk-top .name{color:var(--bone-dim);}
-  .bk-top .val{font-family:'JetBrains Mono',monospace;color:var(--bone);}
-  .bk-bar{height:8px;background:var(--panel-2);border-radius:4px;overflow:hidden;border:1px solid var(--hairline);}
-  .bk-fill{height:100%;border-radius:4px;transition:width .35s ease;}
-  .bk-fill.nc{background:linear-gradient(90deg,#5c6a72,#7c8991);}
-  .bk-fill.cn{background:linear-gradient(90deg,#c9622a,#f2913f);}
-  .bk-fill.nv{background:linear-gradient(90deg,#8f2323,#c93f3f);}
-  .bk-fill.cv{background:linear-gradient(90deg,#7a1f6b,#c93fb5);}
-
-  .dr-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--hairline);flex-wrap:wrap;}
-  .dr-row label{font-size:11.5px;color:var(--bone-dim);display:flex;align-items:center;gap:7px;}
-  .dr-row input[type=number]{width:70px;padding:6px 8px;font-size:12.5px;text-align:right;}
-  .dr-mitigated{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--bone-dim);}
-  .dr-mitigated b{color:var(--bone);}
-
-  .save-row{display:flex;gap:10px;margin-bottom:16px;}
-  .save-row input[type=text]{flex:1;}
-  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));border:none;color:var(--void);font-family:'Cinzel',serif;font-weight:700;font-size:12.5px;letter-spacing:.05em;padding:0 18px;border-radius:2px;cursor:pointer;white-space:nowrap;}
-  .btn-gold:hover{filter:brightness(1.08);}
-  .btn-ghost{background:none;border:1px solid var(--hairline);color:var(--bone-dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 12px;border-radius:2px;cursor:pointer;}
-  .btn-ghost:hover{border-color:var(--gold);color:var(--gold-bright);}
-  .compare-table{width:100%;border-collapse:collapse;font-size:13px;}
-  .compare-table th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--bone-dim);padding:8px;border-bottom:1px solid var(--hairline);}
-  .compare-table td{padding:9px 8px;border-bottom:1px solid rgba(74,59,40,.4);}
-  .compare-table tr.best-row{background:rgba(169,128,63,.09);}
-  .compare-table .cname{color:var(--bone);font-weight:500;display:flex;align-items:center;gap:6px;}
-  .best-badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--void);background:var(--gold-bright);padding:2px 6px;border-radius:8px;white-space:nowrap;}
-  .compare-table .cmode{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);}
-  .compare-table .cdps{font-family:'JetBrains Mono',monospace;color:var(--ember-bright);font-weight:700;}
-  .compare-table .cdelta{font-family:'JetBrains Mono',monospace;font-size:12px;}
-  .cdelta.up{color:var(--sage-text);} .cdelta.down{color:var(--blood-text);} .cdelta.flat{color:var(--bone-dim);}
-  .compare-actions{display:flex;gap:6px;}
-  .icon-btn{background:none;border:1px solid var(--hairline);color:var(--bone-dim);width:26px;height:26px;border-radius:2px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
-  .icon-btn:hover{border-color:var(--gold);color:var(--gold-bright);}
-  .empty-note{color:var(--bone-dim);font-size:12.5px;text-align:center;padding:18px 0;}
-  .io-row{display:flex;gap:10px;margin-top:16px;border-top:1px solid var(--hairline);padding-top:14px;flex-wrap:wrap;}
-  .persist-note{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--bone-dim);margin-top:10px;}
-  #ioArea{display:none;width:100%;margin-top:10px;background:var(--void);border:1px solid var(--hairline);color:var(--bone-dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px;border-radius:2px;min-height:80px;resize:vertical;}
-  footer{text-align:center;color:var(--bone-dim);font-size:11.5px;margin-top:36px;line-height:1.7;}
-  .caveat{background:var(--panel-2);border:1px solid var(--hairline);border-left:3px solid var(--ember);border-radius:2px;padding:12px 14px;font-size:12px;color:var(--bone-dim);line-height:1.6;margin-bottom:18px;}
-  .caveat b{color:var(--ember-bright);}
-  .caveat ul{margin:8px 0 0;padding-left:18px;}
-  .caveat li{margin-bottom:4px;}
-  .version-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:8px;}
-
-  /* ---- Beginner guide ---- */
-  .guide-panel{
-    background:linear-gradient(180deg,var(--panel) 0%, var(--iron) 100%);
-    border:1px solid var(--gold);border-radius:2px;margin-bottom:22px;overflow:hidden;
-  }
-  .guide-panel summary{
-    cursor:pointer;list-style:none;padding:15px 20px;display:flex;align-items:center;gap:10px;
-    font-family:'Cinzel',serif;font-weight:700;font-size:14.5px;letter-spacing:.03em;color:var(--gold-bright);
-  }
-  .guide-panel summary::-webkit-details-marker{display:none;}
-  .guide-panel summary::before{content:"▸";color:var(--gold);font-size:12px;transition:transform .15s;}
-  .guide-panel[open] summary::before{transform:rotate(90deg);}
-  .guide-panel summary .tiny{margin-left:auto;font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--bone-dim);text-transform:none;letter-spacing:0;}
-  .guide-body{padding:2px 20px 20px;font-size:13px;line-height:1.7;color:var(--bone-dim);border-top:1px solid var(--hairline);}
-  .guide-body>p{margin:14px 0 0;}
-  .guide-body b{color:var(--gold-bright);font-weight:600;}
-  .guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:14px;}
-  @media(max-width:640px){.guide-grid{grid-template-columns:1fr;}}
-  .guide-item{background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;padding:11px 13px;}
-  .guide-item .t{color:var(--gold-bright);font-weight:600;font-size:12.5px;margin-bottom:5px;}
-  .guide-item .d{font-size:12px;color:var(--bone-dim);line-height:1.6;}
-
-  /* ---- inline help icon ---- */
-  .qmark{
-    display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
-    border:1px solid var(--bone-dim);color:var(--bone-dim);font-size:9.5px;font-family:'JetBrains Mono',monospace;
-    cursor:help;margin-left:5px;flex:none;line-height:1;background:none;padding:0;-webkit-appearance:none;appearance:none;
-  }
-  .qmark:hover{border-color:var(--gold);color:var(--gold-bright);}
-  .qmark:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;border-color:var(--gold);color:var(--gold-bright);}
-  label .label-text{display:inline-flex;align-items:center;}
-
-  .tab-note{text-align:center;font-size:11.5px;color:var(--bone-dim);margin:-14px 0 22px;line-height:1.6;}
-
-  /* ---- Paperdoll gear layout (Advanced Mode) ---- */
-  .paperdoll-wrap{display:grid;grid-template-columns:130px 1fr 130px;gap:14px 18px;align-items:start;margin-bottom:24px;}
-  @media(max-width:760px){.paperdoll-wrap{grid-template-columns:1fr 1fr;}}
-  @media(max-width:460px){.paperdoll-wrap{grid-template-columns:1fr;}}
-  .paperdoll-col{display:flex;flex-direction:column;gap:12px;align-items:center;}
-  .paperdoll-stage{display:flex;flex-direction:column;align-items:center;gap:16px;}
-  .paperdoll-silhouette{width:100%;max-width:170px;opacity:.9;}
-  .paperdoll-arsenal{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:280px;}
-
+  /* ---------- paperdoll ---------- */
+  .pd{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;}
+  @media(max-width:640px){.pd{grid-template-columns:1fr 1fr;}.pd-stage{grid-column:1/-1;order:-1;}}
+  .pd-col{display:flex;flex-direction:column;gap:9px;}
+  .pd-stage{display:flex;flex-direction:column;align-items:center;gap:11px;padding:0 6px;}
+  .pd-fig{width:104px;height:auto;opacity:.55;}
+  .pd-arsenal{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;max-width:150px;}
   .pd-slot{
-    width:100%;max-width:96px;aspect-ratio:1;background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;
-    position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:6px;gap:3px;transition:border-color .15s, transform .15s;color:inherit;font-family:inherit;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:8px 9px;
+    cursor:pointer;text-align:left;width:100%;color:inherit;font-family:inherit;
+    display:flex;flex-direction:column;gap:3px;position:relative;transition:border-color .12s,background .12s;
   }
-  .pd-slot::before,.pd-slot::after{content:"";position:absolute;width:8px;height:8px;border:1px solid var(--gold);opacity:.5;}
-  .pd-slot::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
-  .pd-slot::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
-  .pd-slot:hover{border-color:var(--gold);transform:translateY(-2px);}
-  .pd-slot:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
-  .pd-slot .pd-icon{font-family:'Cinzel',serif;font-weight:700;font-size:15px;color:var(--bone-dim);line-height:1;}
-  .pd-slot .pd-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--bone-dim);}
-  .pd-slot .pd-name{font-size:9.5px;line-height:1.25;color:var(--bone);text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-  .pd-slot .pd-count{position:absolute;top:4px;right:5px;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--gold-bright);}
-  .pd-slot.rarity-empty{border-style:dashed;}
-  .pd-slot.rarity-empty .pd-icon{color:var(--steel);}
-  .pd-slot.rarity-item{border-color:var(--ember);}
-  .pd-slot.rarity-item .pd-icon{color:var(--ember-bright);}
-  .pd-slot.rarity-mythic{border-color:#a874d1;box-shadow:0 0 10px rgba(168,116,209,.25);}
-  .pd-slot.rarity-mythic .pd-icon{color:#c79ee8;}
-  .pd-slot.pd-arsenal-slot{max-width:58px;padding:4px;gap:2px;}
-  .pd-slot.pd-arsenal-slot .pd-icon{font-size:12px;}
-  .pd-slot.pd-arsenal-slot .pd-name{font-size:8px;-webkit-line-clamp:2;}
-  .pd-slot.pd-arsenal-slot .pd-label{display:none;}
+  .pd-slot:hover{border-color:var(--gold-dim);background:var(--surface-3);}
+  .pd-slot .s-lab{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-family:'JetBrains Mono',monospace;}
+  .pd-slot .s-name{font-size:11.5px;color:var(--text);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .pd-slot .s-meta{font-size:10px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;}
+  .pd-slot.r-empty{border-style:dashed;}
+  .pd-slot.r-empty .s-name{color:var(--text-faint);}
+  .pd-slot.r-item{border-left:3px solid var(--ember-dim);}
+  .pd-slot.r-mythic{border-left:3px solid var(--violet);}
+  .pd-slot.r-mythic .s-name{color:var(--violet);}
+  .pd-arsenal .pd-slot{padding:6px 7px;}
+  .pd-arsenal .pd-slot .s-name{-webkit-line-clamp:2;font-size:10.5px;}
+  .pd-slot.active-weapon{box-shadow:0 0 0 1px var(--gold) inset;border-color:var(--gold);}
+  .pd-slot .wpn-tag{position:absolute;top:5px;right:6px;font-size:8.5px;color:var(--gold);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;}
 
-  .paperdoll-stats{display:flex;flex-direction:column;gap:8px;width:100%;}
-  .pd-stat{background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;padding:8px 10px;}
-  .pd-stat .l{font-size:9.5px;color:var(--bone-dim);text-transform:uppercase;letter-spacing:.04em;}
-  .pd-stat .v{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold-bright);font-weight:700;margin-top:2px;}
-  .tab-note b{color:var(--bone-dim);}
+  /* ---------- gear slot editor ---------- */
+  .slot-edit{border:1px solid var(--line-soft);border-radius:5px;margin-bottom:8px;background:var(--surface-2);overflow:hidden;}
+  .slot-edit>summary{
+    padding:10px 13px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:500;
+  }
+  .slot-edit>summary::-webkit-details-marker{display:none;}
+  .slot-edit>summary::before{content:"▸";color:var(--text-faint);font-size:10px;transition:transform .12s;}
+  .slot-edit[open]>summary::before{transform:rotate(90deg);}
+  .slot-edit>summary .s-sum{margin-left:auto;font-size:11px;color:var(--text-faint);font-weight:400;text-align:right;}
+  .slot-body{padding:0 13px 13px;border-top:1px solid var(--line-soft);padding-top:12px;}
+  .affix{display:grid;grid-template-columns:1fr 78px 150px auto;gap:7px;align-items:center;margin-bottom:6px;}
+  @media(max-width:600px){.affix{grid-template-columns:1fr 70px auto;}.affix select{grid-column:1/-1;}}
+  .affix input[type=text]{padding:6px 8px;font-size:12px;}
+  .affix input[type=number]{padding:6px 8px;font-size:12px;text-align:right;}
+  .affix select{padding:6px 22px 6px 8px;font-size:11.5px;}
+
+  /* ---------- results panel ---------- */
+  .results{position:sticky;top:16px;}
+  @media(max-width:1040px){.results{position:static;}}
+  .dps-hero{padding:20px 16px 16px;text-align:center;border-bottom:1px solid var(--line-soft);}
+  .dps-hero .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);margin-bottom:6px;}
+  .dps-hero .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:38px;line-height:1;color:var(--ember);}
+  .dps-hero .note{font-size:11px;color:var(--text-faint);margin-top:7px;}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);}
+  .tile{background:var(--surface);padding:11px 12px;}
+  .tile .t-l{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;}
+  .tile .t-v{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);font-weight:500;margin-top:2px;}
+
+  .chain{padding:13px 16px;border-top:1px solid var(--line-soft);}
+  .chain h3{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);margin-bottom:9px;}
+  .chain-row{display:flex;align-items:baseline;gap:8px;font-size:12px;padding:3px 0;}
+  .chain-row .c-op{font-family:'JetBrains Mono',monospace;color:var(--text-faint);width:12px;flex:none;}
+  .chain-row .c-l{color:var(--text-dim);flex:1;min-width:0;}
+  .chain-row .c-v{font-family:'JetBrains Mono',monospace;color:var(--text);white-space:nowrap;}
+  .chain-row.total{border-top:1px solid var(--line-soft);margin-top:6px;padding-top:8px;font-weight:600;}
+  .chain-row.total .c-l{color:var(--text);}
+  .chain-row.total .c-v{color:var(--gold);}
+
+  .outcomes{padding:13px 16px;border-top:1px solid var(--line-soft);}
+  .oc{margin-bottom:9px;}
+  .oc:last-child{margin-bottom:0;}
+  .oc-top{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;}
+  .oc-top .n{color:var(--text-dim);}
+  .oc-top .v{font-family:'JetBrains Mono',monospace;color:var(--text-dim);}
+  .oc-bar{height:5px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
+  .oc-fill{height:100%;border-radius:3px;transition:width .25s ease;}
+
+  .issues{padding:12px 16px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px;}
+  .issue{display:flex;gap:8px;font-size:11.5px;line-height:1.45;}
+  .issue .ic{flex:none;font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .issue.warn .ic{color:var(--ember);}
+  .issue.err .ic{color:var(--red);}
+  .issue.info .ic{color:var(--blue);}
+  .issue .tx{color:var(--text-dim);}
+
+  /* ---------- compare table ---------- */
+  .ctable{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .ctable th{text-align:left;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint);padding:7px 8px;border-bottom:1px solid var(--line-soft);font-weight:600;}
+  .ctable td{padding:8px;border-bottom:1px solid var(--line-soft);}
+  .ctable tr:last-child td{border-bottom:none;}
+  .ctable .c-dps{font-family:'JetBrains Mono',monospace;color:var(--ember);font-weight:600;}
+  .ctable .c-d{font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .up{color:var(--green);} .down{color:var(--red);} .flat{color:var(--text-faint);}
+  .empty{color:var(--text-faint);font-size:12.5px;text-align:center;padding:16px 0;}
+
+  details.plain>summary{cursor:pointer;list-style:none;font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:7px;padding:4px 0;}
+  details.plain>summary::-webkit-details-marker{display:none;}
+  details.plain>summary::before{content:"▸";font-size:10px;color:var(--text-faint);transition:transform .12s;}
+  details.plain[open]>summary::before{transform:rotate(90deg);}
+  details.plain>summary:hover{color:var(--text);}
+
+  .hint{font-size:11.5px;color:var(--text-faint);line-height:1.5;}
+  .hint.mt{margin-top:10px;}
+  code{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface-3);padding:1px 5px;border-radius:3px;color:var(--gold);}
+  footer{max-width:1280px;margin:26px auto 0;padding:18px 20px 0;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--text-faint);line-height:1.7;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  #io{display:none;width:100%;margin-top:10px;background:var(--bg);border:1px solid var(--line);color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:9px;border-radius:4px;min-height:76px;resize:vertical;}
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1 class="brand">Whirlwind Calculator<span>Diablo IV · Barbarian</span></h1>
+    <div class="topbar-actions">
+      <button class="btn btn-sm" id="btnSample" type="button">Load sample build</button>
+      <button class="btn btn-sm" id="btnClear" type="button">Clear all</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
+<div class="layout">
 
-  <header>
-    <div class="eyebrow">Additive · Multiplicative · Conditional</div>
-    <h1>The Damage Reckoner</h1>
-    <p class="sub">Basic mode: toggle whichever stats apply to your build. Advanced mode: enter every affix off each equipped item and let it roll up automatically.</p>
-    <div class="version-tag">v5 — Season 14 "Death Awakening" (patch 3.1.x)</div>
-    <div class="rule"></div>
-  </header>
+  <!-- ============ MAIN COLUMN ============ -->
+  <div class="col-main">
 
-  <details class="guide-panel" open>
-    <summary>🔰 New here? Start with this 60-second guide<span class="tiny">click to collapse</span></summary>
-    <div class="guide-body">
-      <p>This tool estimates your Whirlwind Barbarian's damage per second (DPS) from the numbers on your character screen, skill tooltip, and gear. Fill in <b>Basic Mode</b> below — every field already has a sensible starting value, so you're just correcting the ones that don't match your build. Everything recalculates live as you type; watch the big number at the bottom change.</p>
-      <div class="guide-grid">
-        <div class="guide-item">
-          <div class="t">Where do I find these numbers in-game?</div>
-          <div class="d">Weapon Min/Max Damage and its Attack Speed % are on your weapon's tooltip. Strength is on your Character Screen (default key <b>C</b>), under Attributes. Skill % is on Whirlwind's own tooltip in your skill bar. Crit Chance, Crit Damage %, and Vulnerable Damage % are on the Character Screen under "Offense".</div>
-        </div>
-        <div class="guide-item">
-          <div class="t">Additive vs. Multiplicative — what's the difference?</div>
-          <div class="d"><b>Additive</b> stats (Section 3) add together first: +50% and +30% become one +80% bonus. <b>Multiplicative</b> stats (Section 4, written "x%") each apply as their own separate factor: two +20% multipliers become ×1.2 × ×1.2 = ×1.44, not ×1.40. The game keeps these two buckets separate, so this tool does too — it's the single biggest thing to get right.</div>
-        </div>
-        <div class="guide-item">
-          <div class="t">Crit &amp; Vulnerable, in plain terms</div>
-          <div class="d"><b>Critical Strike</b> is a % chance for a hit to deal bonus damage (a fixed ×1.5 here). <b>Vulnerable</b> is a debuff you put on enemies that makes every hit against them deal bonus damage (a fixed ×1.2). "Vulnerable Uptime" is roughly how much of a fight the enemy is Vulnerable for — 100% if you can keep it up constantly.</div>
-        </div>
-        <div class="guide-item">
-          <div class="t">Don't have every number handy yet?</div>
-          <div class="d">That's fine — every field starts pre-filled with a reasonable value for a mid-to-late-game Whirlwind build. Change only what you know for now and refine the rest later; nothing needs to be perfect to get a useful estimate.</div>
+    <!-- Setup -->
+    <section class="card">
+      <div class="card-head"><h2>Setup</h2><div class="sub" id="apsSub"></div></div>
+      <div class="card-body">
+        <div class="grid g3">
+          <div class="field">
+            <label for="skillPct">Whirlwind skill damage %</label>
+            <input type="number" id="skillPct" min="0" step="0.1" value="60">
+            <div class="hint">From Whirlwind's own tooltip — includes your skill ranks.</div>
+          </div>
+          <div class="field">
+            <label for="activeWeapon">Weapon powering Whirlwind</label>
+            <select id="activeWeapon"></select>
+            <div class="hint">Arsenal assignment. Sets weapon damage + speed class.</div>
+          </div>
+          <div class="field">
+            <label for="strPer10">Strength per 1% damage <span class="prov prov-unverified" title="Sources conflict on the current coefficient — see Data confidence."></span></label>
+            <input type="number" id="strPer10" min="1" step="0.5" value="10">
+            <div class="hint">Verify against your sheet. 10 and 12.5 are both reported.</div>
+          </div>
         </div>
       </div>
-      <p>Once you're comfortable, <b>Advanced Mode</b> lets you enter every individual affix off every equipped item instead of lump-sum totals — handy for comparing two specific pieces of gear, but not required to get started. Most players should stay in Basic Mode.</p>
-    </div>
-  </details>
+    </section>
 
-  <div class="tabs">
-    <button class="tab-btn active" id="tabBasic" type="button">Basic Mode</button>
-    <button class="tab-btn" id="tabAdvanced" type="button">Advanced Mode — Per-Item Gear</button>
-  </div>
-  <p class="tab-note"><b>New to this tool?</b> Stay in Basic Mode — it covers everything most builds need. Advanced Mode is for entering exact per-item affixes, useful once you're comparing specific gear upgrades.</p>
-
-  <!-- ================= BASIC MODE ================= -->
-  <div class="mode-panel active" id="panelBasic">
-
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">1</span>Weapon &amp; Skill<span class="line"></span></h2>
-      <div class="grid cols-3">
-        <div class="field"><label for="wMin"><span class="label-text">Weapon Min Dmg<button type="button" class="qmark" title="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here." aria-label="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here.">?</button></span></label><input type="number" id="wMin" value="620" min="0"></div>
-        <div class="field"><label for="wMax"><span class="label-text">Weapon Max Dmg<button type="button" class="qmark" title="Same tooltip as Min Dmg — enter the higher number of the two." aria-label="Same tooltip as Min Dmg — enter the higher number of the two.">?</button></span></label><input type="number" id="wMax" value="930" min="0"></div>
-        <div class="field"><label for="skillPct"><span class="label-text">Skill % <button type="button" class="qmark" title="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent." aria-label="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent.">?</button></span><span class="hint">advanced tooltip</span></label><input type="number" id="skillPct" value="60" step="0.1" min="0"></div>
-        <div class="field"><label for="strength"><span class="label-text">Strength <button type="button" class="qmark" title="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage." aria-label="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage.">?</button></span><span class="hint">1% / 10 str</span></label><input type="number" id="strength" value="2500" min="0"></div>
-        <div class="field"><label for="wpCategory"><span class="label-text">Weapon Speed Category<button type="button" class="qmark" title="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip." aria-label="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip.">?</button></span></label>
-          <select id="wpCategory">
-            <option value="mace">2H Mace / Axe / Polearm</option>
-            <option value="sword2h">2H Sword</option>
-            <option value="dual">Dual Wield</option>
-          </select>
+    <!-- Scenario -->
+    <section class="card">
+      <div class="card-head"><h2>Scenario</h2><div class="sub">what you're measuring against</div></div>
+      <div class="card-body">
+        <div class="grid g2" style="margin-bottom:14px;">
+          <div class="field">
+            <label for="vulnUptime">Vulnerable uptime <output id="vulnOut">90%</output></label>
+            <div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"></div>
+          </div>
+          <div class="field">
+            <label>Target</label>
+            <div class="seg" role="group" aria-label="Target type">
+              <button type="button" data-target="normal">Normal</button>
+              <button type="button" data-target="elite">Elite</button>
+              <button type="button" data-target="boss">Boss</button>
+            </div>
+          </div>
         </div>
-        <div class="field"><label for="asTotal"><span class="label-text">Total Attack Speed % <button type="button" class="qmark" title="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below." aria-label="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below.">?</button></span><span class="hint">Cap 1 + Cap 2 combined</span></label><input type="number" id="asTotal" value="0" step="1" min="0" max="200"></div>
+        <div class="chips" id="condChips"></div>
+        <div class="hint mt">Conditional damage stats below activate automatically from these. <strong>Close</strong> is always on — Whirlwind is melee.</div>
       </div>
-      <div class="subtotal"><span>Whirlwind APS — Season 14 frame breakpoint</span><b id="apsOut">0.900 (26f)</b></div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">2</span>Critical Strike &amp; Vulnerable<span class="line"></span></h2>
-      <p class="panel-desc">Always enter the <b>bottom</b> tooltip number for Crit Damage and Vulnerable Damage — the top number already bakes in the fixed multiplier this tool applies separately.</p>
-      <div class="grid">
-        <div class="field"><label for="critChance"><span class="label-text">Critical Strike Chance <button type="button" class="qmark" title="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense." aria-label="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense.">?</button></span><span class="hint">fixed ×1.5 on crit</span></label><div class="slider-row"><input type="range" id="critChance" min="0" max="100" value="85" step="1"><span class="slider-val" id="critChanceVal">85%</span></div></div>
-        <div class="field"><label for="vulnUptime"><span class="label-text">Vulnerable Uptime <button type="button" class="qmark" title="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic." aria-label="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic.">?</button></span><span class="hint">fixed ×1.2 while vuln</span></label><div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="vulnUptimeVal">90%</span></div></div>
-        <div class="field"><label for="critDmgAdd"><span class="label-text">Critical Strike Damage % <button type="button" class="qmark" title="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5." aria-label="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5.">?</button></span><span class="hint">bottom value</span></label><input type="number" id="critDmgAdd" value="410" min="0"></div>
-        <div class="field"><label for="vulnDmgAdd"><span class="label-text">Vulnerable Damage % <button type="button" class="qmark" title="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2." aria-label="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2.">?</button></span><span class="hint">bottom value</span></label><input type="number" id="vulnDmgAdd" value="450" min="0"></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">3</span>Additive Damage Bucket<span class="line"></span></h2>
-      <p class="panel-desc">Every stat relevant to Whirlwind Barbarian, pre-loaded. <b>Check on</b> whatever you actually have on your gear — unchecked rows are ignored but stay handy for later. Add anything missing at the bottom. These stats <b>add together</b> before anything else applies — e.g. turning on a +50% row and a +30% row gives one +80% bonus, never ×1.5 × ×1.3.</p>
-      <div class="caveat">
-        <b>The two Paragon rows below are guesses, not real numbers.</b> Current Season 14 Glyph and Legendary Node formulas aren't something I have reliable data for — my own knowledge may predate this season, and I couldn't reach maxroll.gg from this environment to verify (see the multiplier caveat above for why). <b>40%</b> and <b>20%</b> are round placeholders so the calculator has something to work with, not calculated or sourced values. Replace them with the real numbers off your own Paragon board tooltips as soon as you can — until then, treat any DPS figure using these two rows as a rough sketch, not a real estimate.
-      </div>
-      <div class="dyn-list" id="addList"></div>
-      <button class="add-row" id="addAddBtn" type="button">+ Add Additive Stat</button>
-      <div class="subtotal"><span>Additive bucket total (checked only)</span><b id="addTotal">+0%</b></div>
-    </div>
-
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">4</span>Global [x]% Multipliers<span class="line"></span></h2>
-      <p class="panel-desc">Stats written as <b>x%</b> rather than <b>+%</b> — each applies as its own independent factor: <b>Total = Π(1 + x%)</b>, not summed. Pre-loaded with every multiplier relevant to this build; check on what's active.</p>
-      <div class="caveat" id="multCaveat">
-        <b>v5 correction pass (sourced, Season 14):</b> several of these presets were shipped as rough placeholders in earlier versions and have now been replaced with current, sourced values or turned into small calculators where the real game mechanic isn't a flat number. See each row's inline hint. Full sourcing lives in the project's PLAN.md.
-        <ul>
-          <li><b>Aspect of Elements</b> has been removed from the game this season — dropped from the preset list entirely.</li>
-          <li><b>Wrath of the Berserker</b> is a flat ~30% All Damage multiplier while active, not a "doubling" of Berserking — relabeled and value corrected.</li>
-          <li><b>Ramaladni's Magnum Opus</b> now computes from your Max Fury instead of a guessed flat 120%.</li>
-          <li><b>Ring of Starless Skies</b> now computes from stack count (10%/stack, capped 50%) instead of a guessed flat 15%.</li>
-          <li><b>Blood Rage</b> now auto-computes as 25% of your "Damage while Berserking" additive stat (capped 45%) instead of a guessed flat 30%.</li>
-          <li><b>Decimator</b> updated 10% → 20% (its Vulnerable-damage portion only — the Overpower-damage half of this node isn't modeled since Overpower itself is out of this tool's scope).</li>
-          <li><b>Call of the Ancients</b> is off by default and flagged unverified — it isn't part of the current mainline Season 14 Whirlwind setup, and its exact current value wasn't confirmed against a live tooltip.</li>
-        </ul>
-        <b>v6 guide cross-check (Aug 2026):</b> checked against Maxroll's live Season 14 "Death Awakening" Whirlwind endgame guide text (its Equipment/Skills/Paragon/FAQ sections; the interactive gear-planner and Paragon-board widgets on that page render as images/canvas and couldn't be read).
-        <ul>
-          <li>Confirms <b>Gohr's Devastating Grips, Tuskhelm of Joritz the Mighty, and Ramaladni's Magnum Opus</b> as the standard endgame Mythic/Unique trio, and <b>Wrath of the Berserker</b> as run "on cooldown" for effectively 100% uptime — see the preset button below.</li>
-          <li>Added <b>Aspect of Anger Management</b> below, off by default: the guide calls it an important damage multiplier and recommends Transfiguring it onto your Amulet, but doesn't give a number — enter your own tooltip value if you use it.</li>
-          <li>No numeric values for Paragon legendary nodes were recoverable (widget content, not text) — Section 3's additive rows and the gear-slot affixes in Advanced Mode are still where those belong; enter them from your own board.</li>
-        </ul>
-        <b>v7 correction, from the user's own Maxroll planner screenshots (Aug 2026):</b> the live Equipment tab (not the guide text) shows the actual endgame gear list.
-        <ul>
-          <li><b>Ring of Starless Skies is equipped (Ring slot)</b> in the real loadout — the v6 guess that it was framed as a non-core alternative was wrong. Moved into the preset's "on" list below.</li>
-          <li>Confirmed equipped: <b>Melted Heart of Selig</b> (Amulet, Mythic) with <b>Aspect of Anger Management</b> Transfigured onto it, <b>The Grandfather</b> (Mythic 2H Sword, alternate weapon set), and Legendary Aspects <b>Channeling, Heavy Hitting, Heavenly Strength, Battle-Mad,</b> and <b>Crushing</b> on the remaining weapon/chest/boots/ring slots. None of these have known % values, so they aren't added as new rows — Advanced Mode's gear slot names are pre-filled to match this loadout instead; fill in your own affix values there.</li>
-          <li><b>Melted Heart of Selig requires zero Life on your gear</b> per the guide's own warning — the less Life you have, the less damage you take with this item equipped. Not modeled by this calculator (it doesn't do defense), just flagged so the gear-slot names don't look like an unexplained build choice.</li>
-        </ul>
-        <b>v9 correction — Mythic Transfiguration:</b> only <b>Unique items</b> can be Transfigured into their Mythic form — not skills, so an earlier pass here that put a "Transfigured to Mythic" checkbox on every row (including Berserking and Wrath of the Berserker) was wrong and has been removed. This section is a flat list of named multipliers, not individual items, so it isn't the right place for that toggle at all. <b>Gohr's Devastating Grips</b> and <b>Tuskhelm of Joritz the Mighty</b> below are simple flat numbers again — already set to their sourced Mythic value (82% / 42%), same as before this ever became a checkbox. The actual per-item Transfiguration toggle now lives in <b>Advanced Mode's Equipped Gear</b> section, next to each item slot's name — that's the part of this tool that deals with individual items.
-      </div>
-      <button class="btn-gold" id="applyKitBtn" type="button" style="margin-bottom:14px;">★ Apply Standard S14 Whirlwind Kit</button>
-      <div class="dyn-list" id="multList"></div>
-      <button class="add-row" id="addMultBtn" type="button">+ Add Multiplier</button>
-      <div class="subtotal"><span>Combined multiplicative factor (checked only)</span><b id="multTotal">×1.00</b></div>
-    </div>
-
-  </div>
-
-  <!-- ================= ADVANCED MODE ================= -->
-  <div class="mode-panel" id="panelAdvanced">
-
-    <div class="caveat">
-      <b>Attack Speed uses real frame breakpoints:</b> Whirlwind's animation is checked every few engine frames, not continuously — so APS jumps in steps rather than scaling smoothly with AS%. This tool uses the published Season 14 Whirlwind breakpoint table (Maxroll Barbarian Compendium) for your chosen weapon speed category, split into Cap 1 and Cap 2 Attack Speed sources (each individually capped at 100%). Frame data is an engine-level property of the skill's animation — Blizzard doesn't reshuffle it every season by default, but skill reworks or balance patches can shift it, so it's worth a quick sanity check against your in-game APS if a new season has just landed. This table is Whirlwind-specific; other Barbarian skills have their own separate breakpoint tables and are not covered by this tool.
-    </div>
-
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">*</span>Character-Level Inputs<span class="line"></span></h2>
-      <div class="grid">
-        <div class="field"><label for="advSkillPct">Skill % <span class="hint">advanced tooltip, not gear-derived</span></label><input type="number" id="advSkillPct" value="60" step="0.1" min="0"></div>
-        <div class="field"><label for="advPrimaryWeapon">Weapon Powering Whirlwind <span class="hint">Arsenal selection</span></label>
-          <select id="advPrimaryWeapon">
-            <option value="weapon_2h_blunt">Two-Handed Bludgeoning</option>
-            <option value="weapon_2h_slash">Two-Handed Slashing</option>
-            <option value="weapon_1h_main">One-Handed (Main)</option>
-            <option value="weapon_1h_off">One-Handed (Off)</option>
-          </select>
+    <!-- Gear -->
+    <section class="card">
+      <div class="card-head"><h2>Gear</h2><div class="sub" id="gearSub"></div></div>
+      <div class="card-body">
+        <div class="pd">
+          <div class="pd-col" id="pdLeft"></div>
+          <div class="pd-stage">
+            <svg class="pd-fig" viewBox="0 0 140 220" aria-hidden="true">
+              <g fill="currentColor" color="#6b5a3e">
+                <circle cx="70" cy="30" r="16"/>
+                <rect x="63" y="44" width="14" height="11"/>
+                <path d="M41 55 L99 55 L93 128 L47 128 Z"/>
+                <path d="M41 58 L14 96 L23 103 L48 68 Z"/>
+                <path d="M99 58 L126 96 L117 103 L92 68 Z"/>
+                <path d="M47 128 L38 205 L56 205 L66 138 Z"/>
+                <path d="M93 128 L102 205 L84 205 L74 138 Z"/>
+              </g>
+            </svg>
+            <div class="pd-arsenal" id="pdArsenal"></div>
+          </div>
+          <div class="pd-col" id="pdRight"></div>
         </div>
-        <div class="field span2"><label for="advVulnUptime">Vulnerable Uptime <span class="hint">playstyle, not gear</span></label><div class="slider-row"><input type="range" id="advVulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="advVulnUptimeVal">90%</span></div></div>
+        <details class="plain" style="margin-top:14px;">
+          <summary>Edit gear affixes</summary>
+          <div style="margin-top:10px;" id="slotEditors"></div>
+        </details>
       </div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">*</span>Equipped Gear<span class="line"></span></h2>
-      <p class="panel-desc">Click a slot below to jump straight to it, or scroll down to the full slot list. Name each item if you like, and add one row per affix exactly as it reads on the tooltip — the category you pick is what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board. Item names are pre-filled to match the confirmed Season 14 endgame loadout (see the v7 caveat in Section 4) — rename any slot that doesn't match your own gear, and add each item's actual affixes yourself since no numeric values were available to pre-fill.</p>
-
-      <div class="adv-summary" id="advSummary"></div>
-
-      <div class="paperdoll-wrap">
-        <div class="paperdoll-col" id="pdLeft"></div>
-        <div class="paperdoll-stage">
-          <svg class="paperdoll-silhouette" viewBox="0 0 140 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-            <defs>
-              <linearGradient id="pdGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#d4af6a"/>
-                <stop offset="60%" stop-color="#a9803f"/>
-                <stop offset="100%" stop-color="#4a3b28"/>
-              </linearGradient>
-            </defs>
-            <circle cx="70" cy="112" r="88" fill="none" stroke="url(#pdGrad)" stroke-width="1" stroke-dasharray="2 7" opacity=".3"/>
-            <rect x="0" y="6" width="10" height="72" rx="2" fill="url(#pdGrad)" transform="rotate(-38 5 42)"/>
-            <path d="M40 62 L12 28 L21 20 L49 58 Z" fill="url(#pdGrad)"/>
-            <path d="M100 62 L126 98 L116 106 L92 70 Z" fill="url(#pdGrad)"/>
-            <path d="M46 130 L37 206 L55 206 L65 140 Z" fill="url(#pdGrad)"/>
-            <path d="M94 130 L103 206 L85 206 L75 140 Z" fill="url(#pdGrad)"/>
-            <path d="M40 58 L100 58 L94 130 L46 130 Z" fill="url(#pdGrad)"/>
-            <rect x="63" y="47" width="14" height="12" fill="url(#pdGrad)"/>
-            <circle cx="70" cy="33" r="17" fill="url(#pdGrad)"/>
-          </svg>
-          <div class="paperdoll-arsenal" id="pdArsenal"></div>
+    <!-- Stats -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Damage stats</h2>
+        <div class="sub" id="addSub"></div>
+      </div>
+      <div class="card-body">
+        <div class="hint" style="margin-bottom:12px;">
+          Totals from your character sheet, <em>plus</em> anything entered on gear above. These all add together into one bucket before multipliers apply. Leave anything you don't have at 0.
         </div>
-        <div class="paperdoll-col" id="pdRight"></div>
+        <div class="statgrid" id="statGrid"></div>
+        <details class="plain" style="margin-top:12px;">
+          <summary id="moreStatsLabel">Show situational stats</summary>
+          <div class="statgrid" id="statGridMore" style="margin-top:10px;"></div>
+        </details>
       </div>
+    </section>
 
-      <div id="gearSlots"></div>
-    </div>
+    <!-- Multipliers -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Multipliers</h2>
+        <div class="sub" id="multSub"></div>
+      </div>
+      <div class="card-body">
+        <div class="hint" style="margin-bottom:12px;">
+          Anything shown as <code>x%</code> in game. Each is its own independent factor — two <code>x20%</code> sources give ×1.44, not ×1.40.
+        </div>
+        <div id="multList"></div>
+        <button class="btn btn-sm" id="btnAddMult" type="button" style="width:100%;margin-top:6px;">+ Add multiplier</button>
+      </div>
+    </section>
+
+    <!-- Snapshots -->
+    <section class="card">
+      <div class="card-head"><h2>Compare</h2><div class="sub">save · change · compare</div></div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input type="text" id="snapName" placeholder="Name this build, e.g. 'before ring swap'" aria-label="Snapshot name">
+          <button class="btn btn-primary" id="btnSave" type="button">Save</button>
+        </div>
+        <table class="ctable" id="cmpTable" style="display:none;">
+          <thead><tr><th>Snapshot</th><th>DPS</th><th>vs current</th><th></th></tr></thead>
+          <tbody id="cmpBody"></tbody>
+        </table>
+        <div class="empty" id="cmpEmpty">No snapshots yet. Save one, change something, and the difference shows up here.</div>
+        <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn btn-sm" id="btnExport" type="button">Export</button>
+          <button class="btn btn-sm" id="btnImport" type="button">Import</button>
+          <button class="btn btn-sm" id="btnWipe" type="button">Delete all</button>
+        </div>
+        <textarea id="io" placeholder="Paste exported JSON, then press Import again." aria-label="Snapshot import/export"></textarea>
+      </div>
+    </section>
 
   </div>
 
-  <!-- ---- Results (shared) ---- -->
-  <div class="results">
-    <div class="eyebrow">Output</div>
-    <div class="headline" id="dpsOut">0</div>
-    <div class="headline-label">Damage Per Second (unmitigated) <button type="button" class="qmark" title="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below." aria-label="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below.">?</button></div>
-    <div class="result-strip">
-      <div class="result-cell"><div class="v" id="avgHitOut">0</div><div class="l">Avg Hit</div></div>
-      <div class="result-cell"><div class="v" id="nonCritOut">0</div><div class="l">No Crit / No Vuln</div></div>
-      <div class="result-cell"><div class="v" id="critOut">0</div><div class="l">Crit + Vuln Hit</div></div>
-      <div class="result-cell"><div class="v" id="strMultOut">×1.00</div><div class="l">Strength Mult.</div></div>
+  <!-- ============ RESULTS ============ -->
+  <aside>
+    <div class="results">
+      <div class="card">
+        <div class="dps-hero">
+          <div class="lab">Damage per second</div>
+          <div class="val" id="dps">0</div>
+          <div class="note" id="dpsNote"></div>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="t-l">Average hit</div><div class="t-v" id="avgHit">0</div></div>
+          <div class="tile"><div class="t-l">Hits / sec</div><div class="t-v" id="apsOut">0</div></div>
+          <div class="tile"><div class="t-l">Crit + Vuln hit</div><div class="t-v" id="bigHit">0</div></div>
+          <div class="tile"><div class="t-l">Plain hit</div><div class="t-v" id="plainHit">0</div></div>
+        </div>
+        <div class="chain">
+          <h3>Per-hit breakdown</h3>
+          <div id="chainRows"></div>
+        </div>
+        <div class="outcomes">
+          <h3 style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);margin-bottom:9px;">Hit outcomes</h3>
+          <div id="outcomeRows"></div>
+        </div>
+        <div class="issues" id="issues"></div>
+      </div>
     </div>
-    <div class="breakdown">
-      <div class="bk-row"><div class="bk-top"><span class="name">No Crit · No Vulnerable</span><span class="val" id="p-nc">0%</span></div><div class="bk-bar"><div class="bk-fill nc" id="bar-nc" style="width:0%"></div></div></div>
-      <div class="bk-row"><div class="bk-top"><span class="name">Crit · No Vulnerable</span><span class="val" id="p-cn">0%</span></div><div class="bk-bar"><div class="bk-fill cn" id="bar-cn" style="width:0%"></div></div></div>
-      <div class="bk-row"><div class="bk-top"><span class="name">No Crit · Vulnerable</span><span class="val" id="p-nv">0%</span></div><div class="bk-bar"><div class="bk-fill nv" id="bar-nv" style="width:0%"></div></div></div>
-      <div class="bk-row"><div class="bk-top"><span class="name">Crit · Vulnerable</span><span class="val" id="p-cv">0%</span></div><div class="bk-bar"><div class="bk-fill cv" id="bar-cv" style="width:0%"></div></div></div>
+  </aside>
+
+</div>
+
+<details class="plain card" style="padding:14px 16px;margin-top:6px;">
+  <summary style="font-size:12.5px;">Data confidence — what's verified and what isn't</summary>
+  <div style="margin-top:12px;">
+    <div class="legend" style="margin-bottom:12px;">
+      <span><i class="prov prov-game"></i> Core mechanic, cross-referenced</span>
+      <span><i class="prov prov-table"></i> Season 14 frame table</span>
+      <span><i class="prov prov-community"></i> Community value, not re-verified</span>
+      <span><i class="prov prov-unverified"></i> Unverified / supply your own</span>
     </div>
-    <div class="dr-row">
-      <label><input type="checkbox" id="drEnabled"> Show Enemy Damage Reduction <button type="button" class="qmark" title="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices." aria-label="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices.">?</button> (off by default — unmitigated DPS above is the primary number)</label>
-      <input type="number" id="drPct" value="85" min="0" max="99" step="0.1" aria-label="Enemy Damage Reduction percent"> <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">% DR</span>
+    <div class="hint">
+      <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Damage-bucket structure was cross-referenced against multiple damage guides: Critical Strike Damage and Vulnerable Damage bonuses are <em>additive</em> into the same bucket as your other <code>+%</code> stats, while the base Critical (<code>×1.5</code>) and Vulnerable (<code>×1.2</code>) effects are separate fixed multipliers. Strength is its own multiplicative bucket. The engine implements exactly this.</p>
+      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. Preloaded multiplier values (Berserking, Wrath of the Berserker, Gohr's, Tuskhelm, Decimator) carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips — check each against your own game and correct it. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
+      <p style="margin:0;"><strong>Why not more.</strong> This build ran without network access to Diablo databases and build-planner sites, so per-item affix values, Paragon node values, and glyph scaling could not be pulled. Anything item-specific has to come off your own character sheet. Nothing here is invented to fill a gap — where a number is unknown it is 0 and flagged.</p>
     </div>
-    <div class="dr-mitigated" id="drOut" style="display:none;"></div>
   </div>
+</details>
 
-  <!-- ---- Save & Compare ---- -->
-  <div class="panel">
-    <h2 class="panel-title"><span class="num">6</span>Save &amp; Compare Builds<span class="line"></span></h2>
-    <p class="panel-desc">Works from either mode. Save a snapshot, change something, save again. The best DPS snapshot is highlighted below.</p>
-    <div class="save-row">
-      <input type="text" id="saveName" placeholder="Name this snapshot, e.g. 'Before ring upgrade'" aria-label="Snapshot name">
-      <button class="btn-gold" id="saveBtn" type="button">Save Snapshot</button>
-    </div>
-    <table class="compare-table" id="compareTable" style="display:none;">
-      <thead><tr><th>Snapshot</th><th>Mode</th><th>DPS</th><th>vs. First Saved</th><th></th></tr></thead>
-      <tbody id="compareBody"></tbody>
-    </table>
-    <div class="empty-note" id="emptyNote">No snapshots saved yet.</div>
-    <div class="io-row">
-      <button class="btn-ghost" id="exportBtn" type="button">Export snapshots (JSON)</button>
-      <button class="btn-ghost" id="importBtn" type="button">Import snapshots (JSON)</button>
-      <button class="btn-ghost" id="clearBtn" type="button">Clear all</button>
-    </div>
-    <textarea id="ioArea" placeholder="Paste exported JSON here, then click Import again to load it."></textarea>
-    <div class="persist-note">Snapshots now save automatically to this browser (localStorage) and reload next time you open this file here. Use Export/Import for backups or moving snapshots to another browser or computer.</div>
-  </div>
-
-  <footer>
-    Avg Dmg = WeaponDmg × Skill% × (1+Str%) × (1+ΣAdditive%) × Π[x]Multipliers<br>
-    Crit / Vulnerable blended across all four outcome cases by Crit Chance × Vulnerable Uptime, each with its fixed ×1.5 / ×1.2 layer.<br>
-    Enemy Damage Reduction, if enabled above, is applied only to the separate mitigated-damage line — never to the headline DPS number.
-  </footer>
-
+<footer>
+  <div><code>hit = weapon × skill% × strength × Π(multipliers) × (1 + additive% [+ crit] [+ vuln]) × 1.5<sub>crit</sub> × 1.2<sub>vuln</sub></code></div>
+  <div style="margin-top:6px;">DPS is the average across all four crit/vulnerable outcomes × attack speed. Whirlwind attack speed uses Season 14 frame breakpoints, so it steps rather than scaling smoothly.</div>
+</footer>
 </div>
 
 <script>
 (function(){
-  const $ = id => document.getElementById(id);
-  function fmt(n){
-    if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
-    if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
-    return n.toFixed(1);
-  }
-  function clamp(n, lo, hi){ return Math.min(hi, Math.max(lo, n)); }
+"use strict";
+const $ = id => document.getElementById(id);
+const el = (t, c) => { const e = document.createElement(t); if (c) e.className = c; return e; };
+const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmt(n){
+  if (!Number.isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (a >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (a >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(1);
+}
 
-  // ============================================================
-  // MODE SWITCHING
-  // ============================================================
-  let currentMode = 'basic';
-  $('tabBasic').addEventListener('click', () => switchMode('basic'));
-  $('tabAdvanced').addEventListener('click', () => switchMode('advanced'));
-  function switchMode(m){
-    currentMode = m;
-    $('tabBasic').classList.toggle('active', m==='basic');
-    $('tabAdvanced').classList.toggle('active', m==='advanced');
-    $('panelBasic').classList.toggle('active', m==='basic');
-    $('panelAdvanced').classList.toggle('active', m==='advanced');
-    compute();
-  }
+// ==========================================================================
+// GAME DATA
+// Every numeric constant carries a provenance tag:
+//   game       - core mechanic, cross-referenced against multiple damage guides
+//   table      - Season 14 Whirlwind frame-breakpoint table (Maxroll Barb Compendium)
+//   community  - carried from this tool's earlier versions; NOT re-verified
+//   unverified - no trustworthy value available; defaults to 0
+// Never invent a number here. If it is unknown, it is 0 and tagged unverified.
+// ==========================================================================
 
-  // ============================================================
-  // WHIRLWIND ATTACK SPEED BREAKPOINTS (Season 14, Maxroll Barbarian Compendium)
-  // Frames | APS | required AS% by weapon speed category
-  // Whirlwind-specific — do not reuse for other Barbarian skills.
-  // ============================================================
-  const WW_BREAKPOINTS = [
-    {frames:26, aps:0.900, mace:0,     sword2h:null, dual:null},
-    {frames:25, aps:0.934, mace:3.8,   sword2h:null, dual:null},
-    {frames:24, aps:0.963, mace:7,     sword2h:0,     dual:null},
-    {frames:23, aps:1.005, mace:11.7,  sword2h:0.5,   dual:null},
-    {frames:22, aps:1.044, mace:16,    sword2h:4.4,   dual:null},
-    {frames:21, aps:1.093, mace:21.4,  sword2h:9.3,   dual:0},
-    {frames:20, aps:1.148, mace:27.5,  sword2h:14.8,  dual:4.3},
-    {frames:19, aps:1.202, mace:33.5,  sword2h:20.2,  dual:9.2},
-    {frames:18, aps:1.264, mace:40.4,  sword2h:26.4,  dual:14.9},
-    {frames:17, aps:1.339, mace:48.8,  sword2h:33.9,  dual:21.7},
-    {frames:16, aps:1.412, mace:56.9,  sword2h:41.2,  dual:28.4},
-    {frames:15, aps:1.505, mace:67.2,  sword2h:50.5,  dual:36.8},
-    {frames:14, aps:1.605, mace:78.3,  sword2h:60.5,  dual:45.9},
-    {frames:13, aps:1.719, mace:91,    sword2h:71.9,  dual:56.3},
-    {frames:12, aps:1.847, mace:105.3, sword2h:84.7,  dual:67.9},
-    {frames:11, aps:2.005, mace:122.8, sword2h:100.5, dual:82.3},
-    {frames:10, aps:2.192, mace:143.5, sword2h:119.2, dual:99.2},
-    {frames:9,  aps:2.407, mace:167.4, sword2h:140.7, dual:118.8},
-    {frames:8,  aps:2.677, mace:197.4, sword2h:167.7, dual:143.3},
-    {frames:7,  aps:3.009, mace:null,  sword2h:null,  dual:173.5},
+// Fixed multipliers attached to the crit / vulnerable status effects themselves.
+// Bonus Crit Damage % and Vulnerable Damage % are NOT here - they are additive
+// bucket members, applied only in the branches where that status is active.
+const CRIT_BASE_MULT = 1.5;   // game
+const VULN_BASE_MULT = 1.2;   // game
+const BASE_CRIT_CHANCE = 5;   // game - character base before gear
+
+// Whirlwind-specific. Other Barbarian skills have their own tables.
+const BREAKPOINTS = [
+  {frames:26, aps:0.900, mace:0,     sword2h:null,  dual:null},
+  {frames:25, aps:0.934, mace:3.8,   sword2h:null,  dual:null},
+  {frames:24, aps:0.963, mace:7,     sword2h:0,     dual:null},
+  {frames:23, aps:1.005, mace:11.7,  sword2h:0.5,   dual:null},
+  {frames:22, aps:1.044, mace:16,    sword2h:4.4,   dual:null},
+  {frames:21, aps:1.093, mace:21.4,  sword2h:9.3,   dual:0},
+  {frames:20, aps:1.148, mace:27.5,  sword2h:14.8,  dual:4.3},
+  {frames:19, aps:1.202, mace:33.5,  sword2h:20.2,  dual:9.2},
+  {frames:18, aps:1.264, mace:40.4,  sword2h:26.4,  dual:14.9},
+  {frames:17, aps:1.339, mace:48.8,  sword2h:33.9,  dual:21.7},
+  {frames:16, aps:1.412, mace:56.9,  sword2h:41.2,  dual:28.4},
+  {frames:15, aps:1.505, mace:67.2,  sword2h:50.5,  dual:36.8},
+  {frames:14, aps:1.605, mace:78.3,  sword2h:60.5,  dual:45.9},
+  {frames:13, aps:1.719, mace:91,    sword2h:71.9,  dual:56.3},
+  {frames:12, aps:1.847, mace:105.3, sword2h:84.7,  dual:67.9},
+  {frames:11, aps:2.005, mace:122.8, sword2h:100.5, dual:82.3},
+  {frames:10, aps:2.192, mace:143.5, sword2h:119.2, dual:99.2},
+  {frames:9,  aps:2.407, mace:167.4, sword2h:140.7, dual:118.8},
+  {frames:8,  aps:2.677, mace:197.4, sword2h:167.7, dual:143.3},
+  {frames:7,  aps:3.009, mace:null,  sword2h:null,  dual:173.5},
+];
+const SPEED_CLASSES = [
+  {v:'mace',    l:'Two-handed mace / axe / polearm'},
+  {v:'sword2h', l:'Two-handed sword'},
+  {v:'dual',    l:'Dual wield'},
+];
+
+// Conditions a damage stat can require. `auto` conditions are always true for
+// this build and are never shown as a toggle.
+const CONDITIONS = {
+  always:     {label:'',                auto:true},
+  close:      {label:'Close',           auto:true,  why:'Whirlwind is melee'},
+  vulnerable: {label:'Vulnerable',      probabilistic:true},
+  berserk:    {label:'Berserking',      chip:'You are Berserking'},
+  fortified:  {label:'Fortified',       chip:'You are Fortified'},
+  healthy:    {label:'Healthy',         chip:'You are Healthy'},
+  elite:      {label:'Elite',           fromTarget:t => t === 'elite' || t === 'boss'},
+  boss:       {label:'Boss',            fromTarget:t => t === 'boss'},
+  cc:         {label:'Crowd controlled', chip:'Target is crowd controlled'},
+  injured:    {label:'Injured target',  chip:'Target is Injured'},
+};
+
+// Additive-bucket stats. `key` is the state key; `cond` gates it on scenario.
+const STAT_DEFS = [
+  {key:'physical',   label:'Physical damage',        cond:'always',     common:true},
+  {key:'core',       label:'Core skill damage',      cond:'always',     common:true},
+  {key:'whirlwind',  label:'Whirlwind damage',       cond:'always',     common:true},
+  {key:'close',      label:'Damage to Close',        cond:'close',      common:true},
+  {key:'berserk',    label:'While Berserking',       cond:'berserk',    common:true},
+  {key:'critDmg',    label:'Critical Strike Damage', cond:'critOnly',   common:true, special:'crit'},
+  {key:'vulnDmg',    label:'Vulnerable damage',      cond:'vulnerable', common:true, special:'vuln'},
+  {key:'elite',      label:'Damage to Elites',       cond:'elite'},
+  {key:'boss',       label:'Damage to Bosses',       cond:'boss'},
+  {key:'cc',         label:'To crowd controlled',    cond:'cc'},
+  {key:'injured',    label:'To Injured enemies',     cond:'injured'},
+  {key:'fortified',  label:'While Fortified',        cond:'fortified'},
+  {key:'healthy',    label:'While Healthy',          cond:'healthy'},
+];
+
+// Multiplier presets. pct 0 + prov 'unverified' means: we do not know, user supplies.
+function defaultMultipliers(){
+  return [
+    {id:'berserking', name:'Berserking',                  pct:25, on:true,  prov:'community', cond:'berserk'},
+    {id:'wotb',       name:'Wrath of the Berserker',      pct:30, on:false, prov:'community', cond:'berserk'},
+    {id:'rmo',        name:"Ramaladni's Magnum Opus",     pct:0,  on:false, prov:'community', special:'rmo', maxFury:150, perFury:0.425},
+    {id:'ross',       name:'Ring of Starless Skies',      pct:0,  on:false, prov:'community', special:'ross', stacks:3},
+    {id:'gohrs',      name:"Gohr's Devastating Grips",    pct:82, on:false, prov:'community'},
+    {id:'tuskhelm',   name:'Tuskhelm of Joritz the Mighty',pct:42,on:false, prov:'community'},
+    {id:'channel',    name:'Aspect of Channeling',        pct:0,  on:false, prov:'unverified'},
+    {id:'anger',      name:'Aspect of Anger Management',  pct:0,  on:false, prov:'unverified'},
+    {id:'crushing',   name:'Aspect of Crushing',          pct:0,  on:false, prov:'unverified', cond:'fortified'},
   ];
+}
 
-  function getWWBreakpoint(asPercent, category){
-    let best = WW_BREAKPOINTS[0];
-    for (const row of WW_BREAKPOINTS){
-      const req = row[category];
-      if (req !== null && req <= asPercent) best = row;
-    }
-    return best;
-  }
+const GEAR_SLOTS = [
+  {id:'helm',    label:'Helm',    col:'L'},
+  {id:'chest',   label:'Chest',   col:'L'},
+  {id:'gloves',  label:'Gloves',  col:'L'},
+  {id:'pants',   label:'Pants',   col:'L'},
+  {id:'boots',   label:'Boots',   col:'L'},
+  {id:'amulet',  label:'Amulet',  col:'R'},
+  {id:'ring1',   label:'Ring 1',  col:'R'},
+  {id:'ring2',   label:'Ring 2',  col:'R'},
+  {id:'w2h_blunt', label:'2H Blunt', col:'W', weapon:true, speed:'mace'},
+  {id:'w2h_slash', label:'2H Sword', col:'W', weapon:true, speed:'sword2h'},
+  {id:'w1h_main',  label:'1H Main',  col:'W', weapon:true, speed:'dual'},
+  {id:'w1h_off',   label:'1H Off',   col:'W', weapon:true, speed:'dual'},
+];
 
-  // ============================================================
-  // BASIC MODE STATE
-  // ============================================================
-  let additives = [
-    {name:"Physical Damage", pct: 500, on:true},
-    {name:"Close Damage", pct: 350, on:true},
-    {name:"Core Skill Damage", pct: 0, on:false},
-    {name:"Whirlwind Skill Damage", pct: 0, on:false},
-    {name:"Damage while Berserking", pct: 300, on:true},
-    {name:"Damage to Vulnerable Enemies", pct: 0, on:false},
-    {name:"Damage to Elites", pct: 0, on:false},
-    {name:"Damage to Crowd Controlled Enemies", pct: 0, on:false},
-    {name:"Damage to Injured Enemies (<50% HP)", pct: 0, on:false},
-    {name:"Damage while Healthy", pct: 0, on:false},
-    {name:"Overpower Damage", pct: 0, on:false},
-    {name:"Bleeding / DoT Damage", pct: 0, on:false},
-    {name:"Damage to Stunned Enemies", pct: 0, on:false},
-    {name:"Total Armor as Damage (misc.)", pct: 0, on:false},
-    {name:"Masterwork Bonus (simplified flat stand-in)", pct: 0, on:false},
-    {name:"Paragon Glyphs, all 5 at assumed rank 100 (UNSOURCED GUESS)", pct: 40, on:false},
-    {name:"Paragon Legendary Nodes, 2nd effect assumed active (UNSOURCED GUESS)", pct: 20, on:false},
-  ];
-  // Global multipliers. `special` marks entries whose pct is computed live
-  // from extra sub-fields rather than typed in directly — see renderMults().
-  let mults = [
-    {name:"Berserking", pct: 25, on: true},
-    {name:"Wrath of the Berserker", pct: 30, on: false},
-    {name:"Ramaladni's Magnum Opus", pct: 0, on: true, special:'rmo', maxFury:150, furyPct:0.425},
-    {name:"Ring of Starless Skies", pct: 0, on: false, special:'ross', stacks:3},
-    {name:"Gohr's Devastating Grips (Mythic value)", pct: 82, on: false},
-    {name:"Tuskhelm of Joritz the Mighty (Mythic value)", pct: 42, on: false},
-    {name:"Call of the Ancients (unverified, non-default S14)", pct: 10, on: false},
-    {name:"Blood Rage (Paragon Legendary node)", pct: 0, on: false, special:'bloodrage'},
-    {name:"Decimator (Vulnerable dmg portion only)", pct: 20, on: false},
-    {name:"Aspect of Anger Management (unverified value)", pct: 0, on: false},
-  ];
+// Affix categories available on a gear slot.
+const AFFIX_CATS = [
+  {v:'str',        l:'Strength'},
+  {v:'critchance', l:'Critical Strike Chance %'},
+  {v:'as1',        l:'Attack Speed % (cap 1)'},
+  {v:'as2',        l:'Attack Speed % (cap 2)'},
+  {v:'mult',       l:'Multiplier x%'},
+].concat(STAT_DEFS.map(s => ({v:'add:'+s.key, l:s.label+' %'})));
 
-  // "Standard S14 Whirlwind Kit" preset — see the v6 guide cross-check caveat above.
-  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips (Mythic value)","Tuskhelm of Joritz the Mighty (Mythic value)","Ring of Starless Skies"];
-  const STANDARD_KIT_OFF = ["Call of the Ancients (unverified, non-default S14)","Blood Rage (Paragon Legendary node)","Decimator (Vulnerable dmg portion only)","Aspect of Anger Management (unverified value)"];
-  function applyStandardKit(){
-    mults.forEach(m => {
-      if (STANDARD_KIT_ON.includes(m.name)) m.on = true;
-      else if (STANDARD_KIT_OFF.includes(m.name)) m.on = false;
-    });
-    renderMults(); compute();
-  }
+// Sample build - clearly a sample, loadable/clearable, not presented as truth.
+const SAMPLE = {
+  skillPct:60, strPer10:10, activeWeapon:'w2h_blunt', vulnUptime:90, target:'elite',
+  conds:{berserk:true, fortified:true, healthy:true, cc:false, injured:false},
+  stats:{physical:500, core:0, whirlwind:0, close:350, berserk:300, critDmg:410, vulnDmg:450,
+         elite:0, boss:0, cc:0, injured:0, fortified:0, healthy:0},
+  strength:2500, critChance:80, as1:0, as2:0,
+  gear:{
+    helm:{name:'Tuskhelm of Joritz the Mighty', mythic:true, affixes:[]},
+    gloves:{name:"Gohr's Devastating Grips", mythic:true, affixes:[]},
+    pants:{name:"Tibault's Will", mythic:true, affixes:[]},
+    amulet:{name:'Melted Heart of Selig', mythic:true, affixes:[]},
+    ring2:{name:'Ring of Starless Skies', mythic:false, affixes:[]},
+    w2h_blunt:{name:'2H Mace — Channeling', wMin:620, wMax:930, affixes:[]},
+    w2h_slash:{name:'The Grandfather', mythic:true, wMin:0, wMax:0, affixes:[]},
+    w1h_main:{name:"Ramaladni's Magnum Opus", mythic:true, wMin:0, wMax:0, affixes:[]},
+  },
+  multsOn:['berserking','wotb','gohrs','tuskhelm'],
+};
 
-  // Resolve a mult row's effective pct, computing "special" rows live.
-  function resolveMultPct(m){
-    if (m.special === 'rmo'){
-      const maxFury = Math.max(0, m.maxFury||0);
-      const furyPct = Math.max(0, m.furyPct||0);
-      return maxFury * furyPct;
-    }
-    if (m.special === 'ross'){
-      const stacks = clamp(Math.round(m.stacks||0), 0, 5);
-      return stacks * 10;
-    }
-    if (m.special === 'bloodrage'){
-      const dwb = additives.find(a => a.name === "Damage while Berserking");
-      const base = dwb ? Math.max(0, dwb.pct||0) : 0;
-      return clamp(0.25 * base, 0, 45);
-    }
-    return m.pct||0;
-  }
-
-  function renderAdditives(){
-    const list = $('addList'); list.innerHTML = '';
-    additives.forEach((a,i) => {
-      const row = document.createElement('div'); row.className = 'dyn-row';
-      row.innerHTML = `
-        <input type="checkbox" ${a.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${a.name} in additive total">
-        <input type="text" value="${a.name}" data-i="${i}" data-role="name" aria-label="Additive stat name">
-        <div class="pct-wrap"><input type="number" value="${a.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${a.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>
-        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${a.name}">✕</button>`;
-      list.appendChild(row);
-    });
-    list.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { additives[+e.target.dataset.i].on = e.target.checked; compute(); }));
-    list.querySelectorAll('[data-role=name]').forEach(el => el.addEventListener('input', e => { additives[+e.target.dataset.i].name = e.target.value; }));
-    list.querySelectorAll('[data-role=pct]').forEach(el => el.addEventListener('input', e => { additives[+e.target.dataset.i].pct = parseFloat(e.target.value)||0; compute(); }));
-    list.querySelectorAll('[data-role=remove]').forEach(el => el.addEventListener('click', e => { additives.splice(+e.target.dataset.i,1); renderAdditives(); compute(); }));
-  }
-  $('addAddBtn').addEventListener('click', () => { additives.push({name:"New Stat", pct:0, on:true}); renderAdditives(); compute(); });
-
-  function multSpecialHTML(m, i){
-    if (m.special === 'rmo'){
-      return `<div class="dyn-special">
-        <div class="mini-field"><label for="rmoFury-${i}">Max Fury</label><input type="number" id="rmoFury-${i}" value="${m.maxFury}" min="0" data-i="${i}" data-role="rmoFury"></div>
-        <div class="mini-field"><label for="rmoPct-${i}">%/Fury point</label><input type="number" id="rmoPct-${i}" value="${m.furyPct}" min="0" max="1" step="0.005" data-i="${i}" data-role="rmoPct"></div>
-        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--bone-dim);">(0.35–0.50%/Fury, drains 10 Fury/sec — sanity check vs. your own tooltip)</span></div>
-      </div>`;
-    }
-    if (m.special === 'ross'){
-      return `<div class="dyn-special">
-        <div class="mini-field"><label for="rossStacks-${i}">Active Stacks (0–5)</label><input type="number" id="rossStacks-${i}" value="${m.stacks}" min="0" max="5" step="1" data-i="${i}" data-role="rossStacks"></div>
-        <div class="computed">= ${resolveMultPct(m).toFixed(0)}% <span style="color:var(--bone-dim);">(10%/stack while spending Fury, capped 50%)</span></div>
-      </div>`;
-    }
-    if (m.special === 'bloodrage'){
-      return `<div class="dyn-special">
-        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--bone-dim);">(25% of your "Damage while Berserking" additive stat, capped 45% — edit that stat in section 3)</span></div>
-      </div>`;
-    }
-    return '';
-  }
-
-  function renderMults(){
-    const list = $('multList'); list.innerHTML = '';
-    mults.forEach((m,i) => {
-      const row = document.createElement('div'); row.className = 'dyn-row';
-      const pctFieldHTML = m.special
-        ? `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`
-        : `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
-      row.innerHTML = `
-        <input type="checkbox" ${m.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${m.name} in multiplier total">
-        <input type="text" value="${m.name}" data-i="${i}" data-role="name" aria-label="Multiplier name">
-        ${pctFieldHTML}
-        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${m.name}">✕</button>
-        ${multSpecialHTML(m, i)}`;
-      list.appendChild(row);
-    });
-    list.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].on = e.target.checked; compute(); }));
-    list.querySelectorAll('[data-role=name]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].name = e.target.value; }));
-    list.querySelectorAll('[data-role=pct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].pct = parseFloat(e.target.value)||0; compute(); }));
-    list.querySelectorAll('[data-role=remove]').forEach(el => el.addEventListener('click', e => { mults.splice(+e.target.dataset.i,1); renderMults(); compute(); }));
-    list.querySelectorAll('[data-role=rmoFury]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].maxFury = parseFloat(e.target.value)||0; renderMults(); compute(); }));
-    list.querySelectorAll('[data-role=rmoPct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].furyPct = parseFloat(e.target.value)||0; renderMults(); compute(); }));
-    list.querySelectorAll('[data-role=rossStacks]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].stacks = clamp(parseFloat(e.target.value)||0,0,5); renderMults(); compute(); }));
-  }
-  $('addMultBtn').addEventListener('click', () => { mults.push({name:"New Multiplier", pct:10, on:true}); renderMults(); compute(); });
-  $('applyKitBtn').addEventListener('click', applyStandardKit);
-
-  function basicState(){
-    const wpCategory = $('wpCategory').value;
-    const asTotal = clamp(parseFloat($('asTotal').value)||0, 0, 200);
-    const bp = getWWBreakpoint(asTotal, wpCategory);
-    return {
-      wMin: Math.max(0, parseFloat($('wMin').value)||0), wMax: Math.max(0, parseFloat($('wMax').value)||0),
-      aps: bp.aps, wpCategory, asTotal, frames: bp.frames,
-      skillPct: Math.max(0, parseFloat($('skillPct').value)||0),
-      strength: Math.max(0, parseFloat($('strength').value)||0),
-      critChance: clamp(parseFloat($('critChance').value)||0, 0, 100), vulnUptime: clamp(parseFloat($('vulnUptime').value)||0, 0, 100),
-      critDmgAdd: Math.max(0, parseFloat($('critDmgAdd').value)||0), vulnDmgAdd: Math.max(0, parseFloat($('vulnDmgAdd').value)||0),
-      otherAdd: additives.filter(a=>a.on).reduce((s,a)=>s+a.pct,0),
-      multProduct: mults.filter(m=>m.on).reduce((p,m)=>p*(1+resolveMultPct(m)/100), 1),
-      additives: JSON.parse(JSON.stringify(additives)), mults: JSON.parse(JSON.stringify(mults)),
-    };
-  }
-
-  // ============================================================
-  // ADVANCED MODE STATE
-  // ============================================================
-  const CATEGORIES = [
-    {v:'add', l:'Additive Damage %'},
-    {v:'critdmg', l:'Critical Strike Damage %'},
-    {v:'vulndmg', l:'Vulnerable Damage %'},
-    {v:'mult', l:'Global Multiplier (x%)'},
-    {v:'str', l:'Strength (flat)'},
-    {v:'critchance', l:'Critical Strike Chance %'},
-    {v:'as1', l:'Attack Speed % — Cap 1'},
-    {v:'as2', l:'Attack Speed % — Cap 2'},
-  ];
-  const GEAR_SLOTS = [
-    {id:'helm', label:'Helm'}, {id:'chest', label:'Chest'}, {id:'gloves', label:'Gloves'},
-    {id:'pants', label:'Pants'}, {id:'boots', label:'Boots'}, {id:'amulet', label:'Amulet'},
-    {id:'ring1', label:'Ring 1'}, {id:'ring2', label:'Ring 2'},
-    {id:'weapon_2h_blunt', label:'Two-Handed Bludgeoning', weapon:true, defaultCategory:'mace'},
-    {id:'weapon_2h_slash', label:'Two-Handed Slashing', weapon:true, defaultCategory:'sword2h'},
-    {id:'weapon_1h_main', label:'One-Handed (Main)', weapon:true, defaultCategory:'dual'},
-    {id:'weapon_1h_off', label:'One-Handed (Off)', weapon:true, defaultCategory:'dual'},
-    {id:'base', label:'Base / Skill Tree / Paragon'},
-  ];
-
-  // Pre-filled from the user's own Maxroll Equipment planner screenshots (Aug 2026) —
-  // item/aspect names only, no numeric values (those weren't visible in the screenshots).
-  // See the v7 caveat in the multiplier panel above.
-  const DEFAULT_GEAR_NAMES = {
-    helm: "Tuskhelm of Joritz the Mighty",
-    chest: "Legendary Chest — Aspect of Heavenly Strength",
-    gloves: "Gohr's Devastating Grips",
-    pants: "Tibault's Will",
-    boots: "Legendary Boots — Aspect of Battle-Mad",
-    amulet: "Melted Heart of Selig (+ Aspect of Anger Management, Transfigured — requires 0 Life on gear)",
-    ring1: "Legendary Ring — Aspect of Crushing",
-    ring2: "Ring of Starless Skies",
-    weapon_2h_blunt: "Legendary 2H Mace — Aspect of Channeling",
-    weapon_2h_slash: "The Grandfather (Mythic)",
-    weapon_1h_main: "Ramaladni's Magnum Opus (Mythic)",
-    weapon_1h_off: "Legendary Sword — Aspect of Heavy Hitting",
-  };
-  // Which pre-filled slots are confirmed Mythic Uniques per the user's own Equipment
-  // screenshots — Ring of Starless Skies' rarity tag was cut off in that screenshot,
-  // so it defaults to not-Mythic rather than assume.
-  const DEFAULT_GEAR_MYTHIC = { helm:true, gloves:true, pants:true, amulet:true, weapon_2h_slash:true, weapon_1h_main:true };
-  let advGear = {};
+// ==========================================================================
+// STATE
+// ==========================================================================
+function blankGear(){
+  const g = {};
   GEAR_SLOTS.forEach(s => {
-    advGear[s.id] = { name: DEFAULT_GEAR_NAMES[s.id]||'', affixes: [], isMythic: !!DEFAULT_GEAR_MYTHIC[s.id] };
-    if (s.weapon) Object.assign(advGear[s.id], { wMin: s.id==='weapon_2h_blunt'?620:0, wMax: s.id==='weapon_2h_blunt'?930:0, category: s.defaultCategory });
+    g[s.id] = {name:'', mythic:false, affixes:[]};
+    if (s.weapon){ g[s.id].wMin = 0; g[s.id].wMax = 0; }
   });
-  advGear.base.affixes = [
-    {label:'Base Critical Strike Chance', value:5, cat:'critchance', on:true},
-    {label:'Base Strength (skill tree/paragon)', value:0, cat:'str', on:true},
-    {label:'Glyph: Carnage (dmg%, example)', value:0, cat:'add', on:false},
-    {label:'Glyph: Warbringer (crit dmg%, example)', value:0, cat:'critdmg', on:false},
+  return g;
+}
+function blankStats(){
+  const o = {};
+  STAT_DEFS.forEach(s => o[s.key] = 0);
+  return o;
+}
+function blankBuild(){
+  return {
+    skillPct:60, strPer10:10, activeWeapon:'w2h_blunt',
+    vulnUptime:90, target:'normal',
+    conds:{berserk:false, fortified:false, healthy:false, cc:false, injured:false},
+    strength:0, critChance:0, as1:0, as2:0,
+    stats:blankStats(), gear:blankGear(), mults:defaultMultipliers(),
+  };
+}
+let build = blankBuild();
+
+function loadSample(){
+  const b = blankBuild();
+  b.skillPct = SAMPLE.skillPct; b.strPer10 = SAMPLE.strPer10;
+  b.activeWeapon = SAMPLE.activeWeapon; b.vulnUptime = SAMPLE.vulnUptime; b.target = SAMPLE.target;
+  Object.assign(b.conds, SAMPLE.conds);
+  Object.assign(b.stats, SAMPLE.stats);
+  b.strength = SAMPLE.strength; b.critChance = SAMPLE.critChance;
+  Object.keys(SAMPLE.gear).forEach(k => { if (b.gear[k]) Object.assign(b.gear[k], SAMPLE.gear[k]); });
+  b.mults.forEach(m => { m.on = SAMPLE.multsOn.indexOf(m.id) !== -1; });
+  build = b;
+}
+
+// ==========================================================================
+// ENGINE (pure)
+// ==========================================================================
+
+function breakpointFor(asPercent, speedClass){
+  let best = null;
+  for (const row of BREAKPOINTS){
+    const req = row[speedClass];
+    if (req !== null && req <= asPercent && (best === null || row.frames < best.frames)) best = row;
+  }
+  // Below the first breakpoint for this class - fall back to its slowest entry.
+  if (!best) for (const row of BREAKPOINTS){ if (row[speedClass] !== null){ best = row; break; } }
+  return best || BREAKPOINTS[0];
+}
+
+function conditionMet(cond, b){
+  const def = CONDITIONS[cond];
+  if (!def) return true;
+  if (def.auto) return true;
+  if (def.fromTarget) return def.fromTarget(b.target);
+  if (def.probabilistic) return true;         // handled in the outcome matrix
+  return !!b.conds[cond];
+}
+
+function resolveMult(m){
+  if (m.special === 'rmo')  return Math.max(0, num(m.maxFury)) * Math.max(0, num(m.perFury));
+  if (m.special === 'ross') return clamp(Math.round(num(m.stacks)), 0, 5) * 10;
+  return num(m.pct);
+}
+
+// Roll gear + manual entry into one set of totals.
+function rollup(b){
+  const t = {
+    strength: num(b.strength),
+    // Characters always have the base crit floor; gear/sheet entry adds to it.
+    critChance: BASE_CRIT_CHANCE + num(b.critChance),
+    as1: num(b.as1), as2: num(b.as2),
+    stats: Object.assign({}, b.stats),
+    gearMults: [],
+  };
+  GEAR_SLOTS.forEach(s => {
+    const g = b.gear[s.id];
+    if (!g) return;
+    g.affixes.forEach(a => {
+      const v = num(a.value);
+      if (!v) return;
+      if (a.cat === 'str') t.strength += v;
+      else if (a.cat === 'critchance') t.critChance += v;
+      else if (a.cat === 'as1') t.as1 += v;
+      else if (a.cat === 'as2') t.as2 += v;
+      else if (a.cat === 'mult') t.gearMults.push({name:a.label || s.label, pct:v, cond:'always'});
+      else if (a.cat.indexOf('add:') === 0){
+        const k = a.cat.slice(4);
+        if (k in t.stats) t.stats[k] += v;
+      }
+    });
+  });
+  return t;
+}
+
+function computeDamage(b){
+  const t = rollup(b);
+  const weapon = b.gear[b.activeWeapon] || {wMin:0,wMax:0};
+  const slotDef = GEAR_SLOTS.find(s => s.id === b.activeWeapon);
+  const speedClass = slotDef ? slotDef.speed : 'mace';
+
+  // --- attack speed: two independent caps of 100% each ---
+  const asTotal = clamp(t.as1, 0, 100) + clamp(t.as2, 0, 100);
+  const bp = breakpointFor(asTotal, speedClass);
+
+  // --- multiplicative buckets ---
+  const activeMults = [];
+  b.mults.forEach(m => {
+    if (!m.on) return;
+    if (m.cond && !conditionMet(m.cond, b)) return;
+    const pct = resolveMult(m);
+    if (pct) activeMults.push({name:m.name, pct});
+  });
+  t.gearMults.forEach(m => { if (m.pct) activeMults.push(m); });
+  const multProduct = activeMults.reduce((p, m) => p * (1 + m.pct/100), 1);
+
+  // --- strength: its own multiplicative bucket ---
+  const strPer10 = Math.max(0.1, num(b.strPer10) || 10);
+  const strMult = 1 + (t.strength / (strPer10 * 100));
+
+  // --- additive bucket, split by when it applies ---
+  let addAlways = 0, addCrit = 0, addVuln = 0;
+  STAT_DEFS.forEach(s => {
+    const v = num(t.stats[s.key]);
+    if (!v) return;
+    if (s.special === 'crit'){ addCrit += v; return; }
+    if (s.special === 'vuln'){ addVuln += v; return; }
+    if (s.cond === 'vulnerable'){ addVuln += v; return; }
+    if (conditionMet(s.cond, b)) addAlways += v;
+  });
+
+  const avgWeapon = (num(weapon.wMin) + num(weapon.wMax)) / 2;
+  const base = avgWeapon * (num(b.skillPct)/100) * strMult * multProduct;
+
+  const A = 1 + addAlways/100;
+  const C = addCrit/100;
+  const V = addVuln/100;
+
+  const hitNC = base * A;
+  const hitCN = base * (A + C) * CRIT_BASE_MULT;
+  const hitNV = base * (A + V) * VULN_BASE_MULT;
+  const hitCV = base * (A + C + V) * CRIT_BASE_MULT * VULN_BASE_MULT;
+
+  const pC = clamp(t.critChance, 0, 100)/100;
+  const pV = clamp(num(b.vulnUptime), 0, 100)/100;
+  const p = {nc:(1-pC)*(1-pV), cn:pC*(1-pV), nv:(1-pC)*pV, cv:pC*pV};
+
+  const avgHit = p.nc*hitNC + p.cn*hitCN + p.nv*hitNV + p.cv*hitCV;
+
+  return {
+    totals:t, asTotal, bp, aps:bp.aps, speedClass, avgWeapon,
+    activeMults, multProduct, strMult, addAlways, addCrit, addVuln,
+    hits:{nc:hitNC, cn:hitCN, nv:hitNV, cv:hitCV},
+    probs:p, avgHit, dps:avgHit * bp.aps,
+    critChance:clamp(t.critChance,0,100),
+  };
+}
+
+function validate(b, r){
+  const out = [];
+  if (r.avgWeapon <= 0) out.push({k:'err', t:'The weapon powering Whirlwind has no damage range — set Min/Max damage on that slot for any of this to mean anything.'});
+  if (num(b.skillPct) <= 0) out.push({k:'err', t:'Whirlwind skill damage is 0%, so every result is 0.'});
+  if (r.totals.critChance > 100) out.push({k:'warn', t:'Critical Strike Chance is over 100% and has been capped at 100% for the calculation.'});
+  if (r.totals.as1 > 100 || r.totals.as2 > 100) out.push({k:'warn', t:'An Attack Speed cap is over 100%; each cap is limited to 100% separately.'});
+  if (num(b.vulnUptime) > 0 && !num(r.totals.stats.vulnDmg)) out.push({k:'info', t:'Vulnerable uptime is set but Vulnerable damage is 0 — you still get the base ×1.2, just no bonus.'});
+  if (b.conds.berserk === false){
+    const berserkStat = num(r.totals.stats.berserk);
+    const berserkMult = b.mults.some(m => m.on && m.cond === 'berserk');
+    if (berserkStat || berserkMult) out.push({k:'info', t:'Berserking is off in Scenario, so your Berserking damage stat and multipliers are excluded.'});
+  }
+  if (b.target === 'normal' && (num(r.totals.stats.elite) || num(r.totals.stats.boss)))
+    out.push({k:'info', t:'Target is Normal, so Elite and Boss damage stats are excluded.'});
+  const unver = b.mults.filter(m => m.on && m.prov === 'unverified' && resolveMult(m) > 0);
+  if (unver.length) out.push({k:'warn', t:'Using unverified values for: ' + unver.map(m=>m.name).join(', ') + '. Confirm against your in-game tooltip.'});
+  const dualWithTwoHander = r.speedClass === 'dual' && (b.activeWeapon === 'w2h_blunt' || b.activeWeapon === 'w2h_slash');
+  if (dualWithTwoHander) out.push({k:'warn', t:'Weapon slot and speed class disagree.'});
+  return out;
+}
+
+// ==========================================================================
+// RENDER
+// ==========================================================================
+let rafPending = false;
+function scheduleRender(){
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; render(); });
+}
+
+function render(){
+  const r = computeDamage(build);
+
+  // --- hero ---
+  $('dps').textContent = fmt(r.dps);
+  $('avgHit').textContent = fmt(r.avgHit);
+  $('bigHit').textContent = fmt(r.hits.cv);
+  $('plainHit').textContent = fmt(r.hits.nc);
+  $('apsOut').textContent = r.aps.toFixed(3);
+  const condBits = [];
+  if (build.target !== 'normal') condBits.push(build.target);
+  Object.keys(build.conds).forEach(k => { if (build.conds[k]) condBits.push(CONDITIONS[k].label.toLowerCase()); });
+  $('dpsNote').textContent = condBits.length ? 'vs ' + condBits.join(' · ') : 'vs a normal enemy';
+  const sc = SPEED_CLASSES.find(c => c.v === r.speedClass);
+  $('apsSub').textContent = (sc ? sc.l + ' · ' : '') + r.asTotal.toFixed(1) + '% AS → ' +
+    r.aps.toFixed(3) + ' aps (' + r.bp.frames + 'f)';
+
+  // --- chain ---
+  const rows = [
+    {op:'',  l:'Weapon damage (avg)', v:fmt(r.avgWeapon)},
+    {op:'×', l:'Skill ' + num(build.skillPct).toFixed(1) + '%', v:(num(build.skillPct)/100).toFixed(3)},
+    {op:'×', l:'Strength ' + Math.round(r.totals.strength).toLocaleString('en-US'), v:'×' + r.strMult.toFixed(3)},
   ];
-
-  function affixRowHTML(slotId, i, a){
-    const opts = CATEGORIES.map(c => `<option value="${c.v}" ${a.cat===c.v?'selected':''}>${c.l}</option>`).join('');
-    return `
-      <div class="affix-row">
-        <input type="checkbox" ${a.on?'checked':''} data-slot="${slotId}" data-i="${i}" data-role="on" aria-label="Include ${a.label} in totals">
-        <input type="text" value="${a.label}" data-slot="${slotId}" data-i="${i}" data-role="label" aria-label="Affix name">
-        <div class="pct-wrap"><input type="number" value="${a.value}" data-slot="${slotId}" data-i="${i}" data-role="value" step="1" aria-label="${a.label} value"></div>
-        <select data-slot="${slotId}" data-i="${i}" data-role="cat" aria-label="${a.label} category">${opts}</select>
-        <button class="dyn-remove" data-slot="${slotId}" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${a.label}">✕</button>
-      </div>`;
+  if (r.activeMults.length){
+    rows.push({op:'×', l:'Multipliers (' + r.activeMults.length + ')', v:'×' + r.multProduct.toFixed(3)});
   }
+  rows.push({op:'×', l:'Additive bucket +' + r.addAlways.toFixed(0) + '%', v:'×' + (1 + r.addAlways/100).toFixed(3)});
+  rows.push({op:'=', l:'Plain hit', v:fmt(r.hits.nc), total:true});
+  $('chainRows').innerHTML = rows.map(x =>
+    '<div class="chain-row' + (x.total?' total':'') + '"><span class="c-op">'+x.op+'</span>' +
+    '<span class="c-l">'+esc(x.l)+'</span><span class="c-v">'+esc(x.v)+'</span></div>'
+  ).join('');
 
-  // ---- Paperdoll: visual gear-slot summary, mirrors advGear, click to jump to its editor below ----
-  function pdSlotHTML(slotId, iconText, labelText, extraClass){
-    const g = advGear[slotId];
-    const name = g.name || '';
-    const rarity = !name.trim() ? 'rarity-empty' : (g.isMythic ? 'rarity-mythic' : 'rarity-item');
-    const activeCount = g.affixes.filter(a=>a.on).length;
-    const countBadge = activeCount ? `<div class="pd-count">${activeCount}</div>` : '';
-    const ariaLabel = `${labelText}: ${name || 'empty'}${activeCount ? ', ' + activeCount + ' active affix' + (activeCount===1?'':'es') : ''} — click to edit`;
-    return `<button type="button" class="pd-slot ${rarity} ${extraClass||''}" data-pd-slot="${slotId}" aria-label="${ariaLabel}">
-      <div class="pd-icon">${iconText}</div>
-      <div class="pd-label">${labelText}</div>
-      <div class="pd-name">${name || '—'}</div>
-      ${countBadge}
-    </button>`;
-  }
+  // --- outcomes ---
+  const oc = [
+    {k:'nc', n:'Plain', c:'#7d7263'},
+    {k:'cn', n:'Crit',  c:'#f2913f'},
+    {k:'nv', n:'Vulnerable', c:'#e8706a'},
+    {k:'cv', n:'Crit + Vulnerable', c:'#c79ee8'},
+  ];
+  $('outcomeRows').innerHTML = oc.map(o =>
+    '<div class="oc"><div class="oc-top"><span class="n">'+o.n+'</span>' +
+    '<span class="v">'+(r.probs[o.k]*100).toFixed(0)+'% · '+fmt(r.hits[o.k])+'</span></div>' +
+    '<div class="oc-bar"><div class="oc-fill" style="width:'+(r.probs[o.k]*100)+'%;background:'+o.c+'"></div></div></div>'
+  ).join('');
 
-  function renderPaperdoll(){
-    const left = $('pdLeft'), right = $('pdRight'), arsenal = $('pdArsenal');
-    if (!left || !right || !arsenal) return;
-    left.innerHTML = [
-      pdSlotHTML('helm','H','Helm'),
-      pdSlotHTML('chest','C','Chest'),
-      pdSlotHTML('gloves','G','Gloves'),
-      pdSlotHTML('pants','P','Pants'),
-      pdSlotHTML('boots','B','Boots'),
-    ].join('');
-    right.innerHTML = [
-      pdSlotHTML('amulet','A','Amulet'),
-      pdSlotHTML('ring1','R1','Ring 1'),
-      pdSlotHTML('ring2','R2','Ring 2'),
-    ].join('');
-    arsenal.innerHTML = [
-      pdSlotHTML('weapon_2h_blunt','2H','2H Blunt','pd-arsenal-slot'),
-      pdSlotHTML('weapon_2h_slash','2H','2H Slash','pd-arsenal-slot'),
-      pdSlotHTML('weapon_1h_main','1H','1H Main','pd-arsenal-slot'),
-      pdSlotHTML('weapon_1h_off','1H','1H Off','pd-arsenal-slot'),
-    ].join('');
-    document.querySelectorAll('.pd-slot').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const det = document.getElementById('gearslot-' + btn.dataset.pdSlot);
-        if (!det) return;
-        det.open = true;
-        det.scrollIntoView({behavior:'smooth', block:'center'});
-        const nameInput = det.querySelector('[data-role=itemname]');
-        if (nameInput) nameInput.focus({preventScroll:true});
-      });
+  // --- issues ---
+  const issues = validate(build, r);
+  $('issues').innerHTML = issues.length
+    ? issues.map(i => '<div class="issue '+i.k+'"><span class="ic">'+(i.k==='err'?'!':i.k==='warn'?'▲':'i')+'</span><span class="tx">'+esc(i.t)+'</span></div>').join('')
+    : '<div class="issue info"><span class="ic">✓</span><span class="tx">No configuration problems detected.</span></div>';
+
+  // --- subtitles ---
+  const gearNamed = GEAR_SLOTS.filter(s => (build.gear[s.id].name||'').trim()).length;
+  $('gearSub').textContent = gearNamed + '/' + GEAR_SLOTS.length + ' filled';
+  $('addSub').textContent = '+' + r.addAlways.toFixed(0) + '% active';
+  $('multSub').textContent = '×' + r.multProduct.toFixed(2);
+
+  renderPaperdoll();
+  renderCompare(r.dps);
+}
+
+function renderChips(){
+  const wrap = $('condChips');
+  wrap.innerHTML = '';
+  Object.keys(CONDITIONS).forEach(k => {
+    const def = CONDITIONS[k];
+    if (!def.chip) return;
+    const b = el('button', 'chip');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', build.conds[k] ? 'true' : 'false');
+    b.innerHTML = '<span class="dot"></span>' + esc(def.chip);
+    b.addEventListener('click', () => {
+      build.conds[k] = !build.conds[k];
+      b.setAttribute('aria-pressed', build.conds[k] ? 'true':'false');
+      renderStats(); renderMults(); scheduleRender();
     });
-  }
-
-  function renderGearSlots(){
-    const wrap = $('gearSlots'); wrap.innerHTML = '';
-    GEAR_SLOTS.forEach(slot => {
-      const g = advGear[slot.id];
-      const det = document.createElement('details');
-      det.className = 'gear-slot';
-      det.id = 'gearslot-' + slot.id;
-      det.dataset.slot = slot.id;
-      if (slot.id === 'weapon_2h_blunt' || slot.id === 'base') det.open = true;
-
-      const affixHTML = g.affixes.map((a,i) => affixRowHTML(slot.id, i, a)).join('');
-      const weaponFieldsHTML = slot.weapon ? `
-        <div class="weapon-fields">
-          <div class="field"><label for="wMin-${slot.id}">Min Dmg</label><input type="number" id="wMin-${slot.id}" data-slot="${slot.id}" data-role="wMin" value="${g.wMin}" min="0"></div>
-          <div class="field"><label for="wMax-${slot.id}">Max Dmg</label><input type="number" id="wMax-${slot.id}" data-slot="${slot.id}" data-role="wMax" value="${g.wMax}" min="0"></div>
-          <div class="field"><label for="category-${slot.id}">Speed Category</label>
-            <select id="category-${slot.id}" data-slot="${slot.id}" data-role="category">
-              <option value="mace" ${g.category==='mace'?'selected':''}>2H Mace/Axe/Polearm</option>
-              <option value="sword2h" ${g.category==='sword2h'?'selected':''}>2H Sword</option>
-              <option value="dual" ${g.category==='dual'?'selected':''}>Dual Wield</option>
-            </select>
-          </div>
-        </div>` : '';
-
-      // Only actual items get this — Unique items are what can be Transfigured to
-      // Mythic, not skills, so this lives here (per-item) and nowhere else.
-      const mythicFieldHTML = slot.id !== 'base' ? `
-        <div class="field gear-mythic-field">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" ${g.isMythic?'checked':''} data-slot="${slot.id}" data-role="itemMythic">
-            <span>Transfigured to Mythic <span class="hint">(only Unique items can be — sets this slot's rarity color on the paperdoll above)</span></span>
-          </label>
-        </div>` : '';
-
-      det.innerHTML = `
-        <summary>${slot.label}<span class="slot-sub">${g.name || 'unnamed'} · ${g.affixes.filter(a=>a.on).length} active</span></summary>
-        <div class="gear-slot-body">
-          <div class="field gear-name-field"><label for="itemname-${slot.id}">Item Name <span class="hint">optional</span></label><input type="text" id="itemname-${slot.id}" data-slot="${slot.id}" data-role="itemname" value="${g.name}" placeholder="e.g. Ramaladni's Magnum Opus"></div>
-          ${mythicFieldHTML}
-          ${weaponFieldsHTML}
-          <div class="dyn-list">${affixHTML}</div>
-          <button class="add-affix" data-slot="${slot.id}" data-role="addaffix" type="button">+ Add Affix</button>
-        </div>`;
-      wrap.appendChild(det);
-    });
-
-    wrap.querySelectorAll('[data-role=itemname]').forEach(el => el.addEventListener('input', e => {
-      const slotId = e.target.dataset.slot;
-      advGear[slotId].name = e.target.value;
-      const sub = e.target.closest('.gear-slot')?.querySelector('.slot-sub');
-      if (sub) sub.textContent = `${advGear[slotId].name || 'unnamed'} · ${advGear[slotId].affixes.filter(a=>a.on).length} active`;
-      renderPaperdoll();
-    }));
-    wrap.querySelectorAll('[data-role=itemMythic]').forEach(el => el.addEventListener('change', e => {
-      advGear[e.target.dataset.slot].isMythic = e.target.checked;
-      renderPaperdoll();
-    }));
-    wrap.querySelectorAll('[data-role=wMin]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].wMin = Math.max(0, parseFloat(e.target.value)||0); compute(); }));
-    wrap.querySelectorAll('[data-role=wMax]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].wMax = Math.max(0, parseFloat(e.target.value)||0); compute(); }));
-    wrap.querySelectorAll('[data-role=category]').forEach(el => el.addEventListener('change', e => { advGear[e.target.dataset.slot].category = e.target.value; compute(); }));
-    wrap.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => {
-      const slotId = e.target.dataset.slot;
-      advGear[slotId].affixes[+e.target.dataset.i].on = e.target.checked;
-      const sub = e.target.closest('.gear-slot')?.querySelector('.slot-sub');
-      if (sub) sub.textContent = `${advGear[slotId].name || 'unnamed'} · ${advGear[slotId].affixes.filter(a=>a.on).length} active`;
-      renderPaperdoll();
-      compute();
-    }));
-    wrap.querySelectorAll('[data-role=label]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].label = e.target.value; }));
-    wrap.querySelectorAll('[data-role=value]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].value = parseFloat(e.target.value)||0; compute(); }));
-    wrap.querySelectorAll('[data-role=cat]').forEach(el => el.addEventListener('change', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].cat = e.target.value; compute(); }));
-    wrap.querySelectorAll('[data-role=remove]').forEach(el => el.addEventListener('click', e => { advGear[e.target.dataset.slot].affixes.splice(+e.target.dataset.i,1); renderGearSlots(); compute(); }));
-    wrap.querySelectorAll('[data-role=addaffix]').forEach(el => el.addEventListener('click', e => {
-      advGear[e.target.dataset.slot].affixes.push({label:'New Affix', value:0, cat:'add', on:true});
-      renderGearSlots(); compute();
-    }));
-    renderPaperdoll();
-  }
-
-  function advancedState(){
-    let totalStr=0, totalAdd=0, totalCritChance=0, totalCritDmg=0, totalVulnDmg=0, totalAS1=0, totalAS2=0, multProduct=1;
-    GEAR_SLOTS.forEach(slot => {
-      advGear[slot.id].affixes.forEach(a => {
-        if (!a.on) return;
-        switch(a.cat){
-          case 'str': totalStr += a.value; break;
-          case 'add': totalAdd += a.value; break;
-          case 'critchance': totalCritChance += a.value; break;
-          case 'critdmg': totalCritDmg += a.value; break;
-          case 'vulndmg': totalVulnDmg += a.value; break;
-          case 'as1': totalAS1 += a.value; break;
-          case 'as2': totalAS2 += a.value; break;
-          case 'mult': multProduct *= (1 + a.value/100); break;
-        }
-      });
-    });
-    // Attack Speed% has two independent caps of 100% each, combined max 200%
-    const asClamped = Math.min(totalAS1,100) + Math.min(totalAS2,100);
-    const primaryId = $('advPrimaryWeapon').value;
-    const pw = advGear[primaryId];
-    const bp = getWWBreakpoint(asClamped, pw.category||'mace');
-
-    return {
-      wMin: pw.wMin||0, wMax: pw.wMax||0, aps: bp.aps, frames: bp.frames,
-      asTotal: asClamped, wpCategory: pw.category||'mace',
-      skillPct: Math.max(0, parseFloat($('advSkillPct').value)||0),
-      strength: Math.max(0, totalStr),
-      critChance: clamp(totalCritChance, 0, 100), vulnUptime: clamp(parseFloat($('advVulnUptime').value)||0, 0, 100),
-      critDmgAdd: Math.max(0, totalCritDmg), vulnDmgAdd: Math.max(0, totalVulnDmg),
-      otherAdd: totalAdd, multProduct,
-      gear: JSON.parse(JSON.stringify(advGear)), primaryWeapon: primaryId,
-    };
-  }
-
-  function renderAdvSummary(s){
-    const cells = [
-      {v: s.strength, l:'Total Strength'},
-      {v: '+'+s.otherAdd.toFixed(0)+'%', l:'Additive Bucket'},
-      {v: '×'+s.multProduct.toFixed(2), l:'Global Multiplier'},
-      {v: s.critChance.toFixed(0)+'%', l:'Crit Chance'},
-      {v: '+'+s.critDmgAdd.toFixed(0)+'%', l:'Crit Damage'},
-      {v: '+'+s.vulnDmgAdd.toFixed(0)+'%', l:'Vulnerable Damage'},
-      {v: s.asTotal.toFixed(1)+'%', l:'Total Attack Speed'},
-      {v: s.aps.toFixed(3)+' ('+s.frames+'f)', l:'Whirlwind APS'},
-    ];
-    $('advSummary').innerHTML = cells.map(c => `<div class="cell"><div class="v">${c.v}</div><div class="l">${c.l}</div></div>`).join('');
-  }
-
-  // ============================================================
-  // CORE FORMULA
-  // ============================================================
-  function calcDPS(s){
-    const strMult = 1 + s.strength/1000;
-    const addBase = 1 + s.otherAdd/100;
-    const avgWeapon = (s.wMin + s.wMax)/2;
-    const base = avgWeapon * (s.skillPct/100) * strMult * s.multProduct;
-
-    const pC = (s.critChance||0)/100, pV = (s.vulnUptime||0)/100;
-    const dmgNC = base * addBase;
-    const dmgCN = base * (addBase + s.critDmgAdd/100) * 1.5;
-    const dmgNV = base * (addBase + s.vulnDmgAdd/100) * 1.2;
-    const dmgCV = base * (addBase + s.critDmgAdd/100 + s.vulnDmgAdd/100) * 1.5 * 1.2;
-
-    const probNC=(1-pC)*(1-pV), probCN=pC*(1-pV), probNV=(1-pC)*pV, probCV=pC*pV;
-    const avgHit = probNC*dmgNC + probCN*dmgCN + probNV*dmgNV + probCV*dmgCV;
-    const dps = avgHit * s.aps;
-    return {strMult, avgHit, dps, dmgNC, dmgCV, probNC, probCN, probNV, probCV};
-  }
-
-  function compute(){
-    $('critChanceVal').textContent = $('critChance').value + '%';
-    $('vulnUptimeVal').textContent = $('vulnUptime').value + '%';
-    $('advVulnUptimeVal').textContent = $('advVulnUptime').value + '%';
-
-    const activeAddTotal = additives.filter(a=>a.on).reduce((s,a)=>s+a.pct,0);
-    $('addTotal').textContent = (activeAddTotal>=0?'+':'') + activeAddTotal + '%';
-    const activeMult = mults.filter(m=>m.on).reduce((p,m)=>p*(1+resolveMultPct(m)/100),1);
-    $('multTotal').textContent = '×' + activeMult.toFixed(2);
-
-    const s = currentMode === 'basic' ? basicState() : advancedState();
-    if (currentMode === 'basic') $('apsOut').textContent = s.aps.toFixed(3) + ' (' + s.frames + 'f)';
-    if (currentMode === 'advanced') renderAdvSummary(s);
-
-    const r = calcDPS(s);
-    $('strMultOut').textContent = '×' + r.strMult.toFixed(2);
-    $('avgHitOut').textContent = fmt(r.avgHit);
-    $('nonCritOut').textContent = fmt(r.dmgNC);
-    $('critOut').textContent = fmt(r.dmgCV);
-
-    const dpsEl = $('dpsOut');
-    dpsEl.textContent = fmt(r.dps);
-    dpsEl.classList.add('pulse'); setTimeout(()=>dpsEl.classList.remove('pulse'), 220);
-
-    $('p-nc').textContent = (r.probNC*100).toFixed(0)+'%'; $('bar-nc').style.width = (r.probNC*100)+'%';
-    $('p-cn').textContent = (r.probCN*100).toFixed(0)+'%'; $('bar-cn').style.width = (r.probCN*100)+'%';
-    $('p-nv').textContent = (r.probNV*100).toFixed(0)+'%'; $('bar-nv').style.width = (r.probNV*100)+'%';
-    $('p-cv').textContent = (r.probCV*100).toFixed(0)+'%'; $('bar-cv').style.width = (r.probCV*100)+'%';
-
-    updateDRLine(r.dps);
-    renderCompare();
-  }
-
-  document.querySelectorAll('#wMin,#wMax,#skillPct,#strength,#wpCategory,#asTotal,#critChance,#vulnUptime,#critDmgAdd,#vulnDmgAdd,#advSkillPct,#advVulnUptime,#advPrimaryWeapon').forEach(el=>{
-    el.addEventListener('input', compute); el.addEventListener('change', compute);
+    wrap.appendChild(b);
   });
+}
 
-  // ============================================================
-  // ENEMY DAMAGE REDUCTION — off by default, side display only.
-  // Never applied to the headline DPS number, per documented scope
-  // (the user explicitly wants an unmitigated baseline as the primary
-  // figure for comparing gear, not a per-content mitigated number).
-  // ============================================================
-  function updateDRLine(dps){
-    const enabled = $('drEnabled').checked;
-    const out = $('drOut');
-    if (!enabled){ out.style.display = 'none'; return; }
-    const dr = clamp(parseFloat($('drPct').value)||0, 0, 99);
-    const mitigated = dps * (1 - dr/100);
-    out.style.display = 'block';
-    out.innerHTML = `Mitigated (vs. ${dr}% Enemy DR): <b>${fmt(mitigated)}</b> DPS`;
-  }
-  $('drEnabled').addEventListener('change', compute);
-  $('drPct').addEventListener('input', compute);
-
-  // ============================================================
-  // SAVE & COMPARE
-  // ============================================================
-  const LS_KEY = 'd4wwReckoner.snapshots.v5';
-  let snapshots = [];
-  function loadSnapshotsFromStorage(){
-    try{
-      const raw = window.localStorage ? window.localStorage.getItem(LS_KEY) : null;
-      if (raw){ const parsed = JSON.parse(raw); if (Array.isArray(parsed)) snapshots = parsed; }
-    } catch(e){ /* localStorage unavailable or corrupt — start empty, non-fatal */ }
-  }
-  function saveSnapshotsToStorage(){
-    try{ if (window.localStorage) window.localStorage.setItem(LS_KEY, JSON.stringify(snapshots)); }
-    catch(e){ /* storage full/unavailable — snapshots still work in-memory + manual export */ }
-  }
-
-  function renderCompare(){
-    const tbl = $('compareTable'), body = $('compareBody'), empty = $('emptyNote');
-    if (snapshots.length === 0){ tbl.style.display='none'; empty.style.display='block'; return; }
-    tbl.style.display=''; empty.style.display='none';
-    const baseline = snapshots[0].dps;
-    const bestDps = Math.max(...snapshots.map(sn => sn.dps));
-    body.innerHTML = '';
-    snapshots.forEach((snap,i) => {
-      const delta = baseline ? ((snap.dps-baseline)/baseline*100) : 0;
-      const dclass = i===0 ? 'flat' : (delta>0.05?'up':(delta<-0.05?'down':'flat'));
-      const sign = delta>0?'+':'';
-      const isBest = snap.dps === bestDps && snapshots.length > 1;
-      const tr = document.createElement('tr');
-      if (isBest) tr.className = 'best-row';
-      tr.innerHTML = `
-        <td class="cname">${snap.name}${isBest ? '<span class="best-badge">Best</span>' : ''}</td>
-        <td class="cmode">${snap.mode}</td>
-        <td class="cdps">${fmt(snap.dps)}</td>
-        <td class="cdelta ${dclass}">${i===0?'baseline':sign+delta.toFixed(1)+'%'}</td>
-        <td><div class="compare-actions">
-          <button class="icon-btn" data-role="load" data-i="${i}" title="Load" aria-label="Load snapshot: ${snap.name}">↺</button>
-          <button class="icon-btn" data-role="del" data-i="${i}" title="Delete" aria-label="Delete snapshot: ${snap.name}">✕</button>
-        </div></td>`;
-      body.appendChild(tr);
+function renderTargetSeg(){
+  document.querySelectorAll('[data-target]').forEach(btn => {
+    btn.setAttribute('aria-pressed', build.target === btn.dataset.target ? 'true' : 'false');
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => {
+      build.target = btn.dataset.target;
+      renderTargetSeg(); renderStats(); renderMults(); scheduleRender();
     });
-    body.querySelectorAll('[data-role=load]').forEach(b => b.addEventListener('click', e => loadSnapshot(+e.currentTarget.dataset.i)));
-    body.querySelectorAll('[data-role=del]').forEach(b => b.addEventListener('click', e => { snapshots.splice(+e.currentTarget.dataset.i,1); saveSnapshotsToStorage(); renderCompare(); }));
-  }
+  });
+}
 
-  function loadSnapshot(i){
-    const snap = snapshots[i];
-    switchMode(snap.mode);
-    if (snap.mode === 'basic'){
-      const s = snap.state;
-      $('wMin').value=s.wMin; $('wMax').value=s.wMax;
-      $('wpCategory').value=s.wpCategory||'mace'; $('asTotal').value=s.asTotal||0;
-      $('skillPct').value=s.skillPct; $('strength').value=s.strength;
-      $('critChance').value=s.critChance; $('vulnUptime').value=s.vulnUptime;
-      $('critDmgAdd').value=s.critDmgAdd; $('vulnDmgAdd').value=s.vulnDmgAdd;
-      additives = JSON.parse(JSON.stringify(s.additives));
-      mults = JSON.parse(JSON.stringify(s.mults));
-      renderAdditives(); renderMults();
+function statRowHTML(s){
+  // Inactive rows are dimmed rather than tagged: the label already names the
+  // condition ("While Berserking", "Damage to Elites"), so a tag just repeats it.
+  const active = s.special || s.cond === 'vulnerable' || conditionMet(s.cond, build);
+  const title = active ? '' : ' title="Not active in the current scenario — excluded from the total."';
+  return '<div class="statrow'+(active?'':' inactive')+'"'+title+'>' +
+    '<label for="stat-'+s.key+'">'+esc(s.label)+'</label>' +
+    '<input type="number" id="stat-'+s.key+'" data-stat="'+s.key+'" step="1" value="'+num(build.stats[s.key])+'">' +
+  '</div>';
+}
+
+function renderStats(){
+  const common = STAT_DEFS.filter(s => s.common);
+  const more = STAT_DEFS.filter(s => !s.common);
+  $('statGrid').innerHTML = common.map(statRowHTML).join('') +
+    '<div class="statrow"><label for="stat-strength">Strength</label>' +
+    '<input type="number" id="stat-strength" data-core="strength" step="1" value="'+num(build.strength)+'"></div>' +
+    '<div class="statrow"><label for="stat-crit">Crit Chance % <span style="opacity:.7;">(+'+BASE_CRIT_CHANCE+' base)</span></label>' +
+    '<input type="number" id="stat-crit" data-core="critChance" step="1" value="'+num(build.critChance)+'"></div>';
+  $('statGridMore').innerHTML = more.map(statRowHTML).join('') +
+    '<div class="statrow"><label for="stat-as1">Attack Speed % (cap 1)</label>' +
+    '<input type="number" id="stat-as1" data-core="as1" step="1" value="'+num(build.as1)+'"></div>' +
+    '<div class="statrow"><label for="stat-as2">Attack Speed % (cap 2)</label>' +
+    '<input type="number" id="stat-as2" data-core="as2" step="1" value="'+num(build.as2)+'"></div>';
+
+  const inactive = more.filter(s => !(s.special || s.cond==='vulnerable' || conditionMet(s.cond, build))).length;
+  $('moreStatsLabel').textContent = 'Show situational stats' + (inactive ? ' (' + inactive + ' inactive for this scenario)' : '');
+
+  document.querySelectorAll('[data-stat]').forEach(inp => {
+    inp.addEventListener('input', e => { build.stats[e.target.dataset.stat] = num(e.target.value); scheduleRender(); });
+  });
+  document.querySelectorAll('[data-core]').forEach(inp => {
+    inp.addEventListener('input', e => { build[e.target.dataset.core] = num(e.target.value); scheduleRender(); });
+  });
+}
+
+function multRowHTML(m, i){
+  const blocked = m.cond && !conditionMet(m.cond, build);
+  const cls = 'mrow' + (blocked ? ' blocked' : (m.on ? '' : ' off'));
+  const why = blocked ? '<span class="why">needs ' + esc(CONDITIONS[m.cond].label) + '</span>' : '';
+  const valField = m.special
+    ? '<span class="mval">'+resolveMult(m).toFixed(1)+'%</span>'
+    : '<input type="number" data-mi="'+i+'" data-mrole="pct" step="1" value="'+num(m.pct)+'" aria-label="'+esc(m.name)+' percent">';
+  let sub = '';
+  if (m.special === 'rmo'){
+    sub = '<div class="msub">' +
+      '<div class="field"><label for="rmo-fury-'+i+'">Max Fury</label><input type="number" id="rmo-fury-'+i+'" data-mi="'+i+'" data-mrole="maxFury" value="'+num(m.maxFury)+'" min="0"></div>' +
+      '<div class="field"><label for="rmo-per-'+i+'">% per Fury</label><input type="number" id="rmo-per-'+i+'" data-mi="'+i+'" data-mrole="perFury" value="'+num(m.perFury)+'" min="0" max="1" step="0.005"></div>' +
+      '<span class="note">= '+resolveMult(m).toFixed(1)+'%</span></div>';
+  } else if (m.special === 'ross'){
+    sub = '<div class="msub">' +
+      '<div class="field"><label for="ross-'+i+'">Stacks (0–5)</label><input type="number" id="ross-'+i+'" data-mi="'+i+'" data-mrole="stacks" value="'+num(m.stacks)+'" min="0" max="5" step="1"></div>' +
+      '<span class="note">= '+resolveMult(m).toFixed(0)+'%</span></div>';
+  }
+  return '<div class="'+cls+'">' +
+    '<input type="checkbox" data-mi="'+i+'" data-mrole="on" '+(m.on?'checked':'')+' '+(blocked?'disabled':'')+' aria-label="Enable '+esc(m.name)+'">' +
+    '<span class="mname"><span class="prov prov-'+m.prov+'" title="'+esc(provTitle(m.prov))+'"></span>'+esc(m.name)+why+'</span>' +
+    valField +
+    '<button class="btn-icon" data-mi="'+i+'" data-mrole="del" type="button" aria-label="Remove '+esc(m.name)+'">✕</button>' +
+    sub + '</div>';
+}
+function provTitle(p){
+  return p === 'game' ? 'Core mechanic, cross-referenced'
+    : p === 'table' ? 'Season 14 frame table'
+    : p === 'community' ? 'Community value, not re-verified this pass'
+    : 'Unverified — supply your own tooltip value';
+}
+
+function renderMults(){
+  $('multList').innerHTML = build.mults.map(multRowHTML).join('');
+  $('multList').querySelectorAll('[data-mrole]').forEach(node => {
+    const i = +node.dataset.mi, role = node.dataset.mrole;
+    if (role === 'del'){
+      node.addEventListener('click', () => { build.mults.splice(i,1); renderMults(); scheduleRender(); });
+    } else if (role === 'on'){
+      node.addEventListener('change', e => { build.mults[i].on = e.target.checked; renderMults(); scheduleRender(); });
     } else {
-      const s = snap.state;
-      advGear = JSON.parse(JSON.stringify(s.gear));
-      $('advSkillPct').value = s.skillPct;
-      $('advVulnUptime').value = s.vulnUptime;
-      $('advPrimaryWeapon').value = s.primaryWeapon;
-      renderGearSlots();
+      node.addEventListener('input', e => {
+        build.mults[i][role] = num(e.target.value);
+        if (build.mults[i].special){ renderMults(); }
+        scheduleRender();
+      });
     }
-    compute();
-  }
+  });
+}
 
-  $('saveBtn').addEventListener('click', () => {
-    const nameInput = $('saveName');
-    const name = nameInput.value.trim() || ('Snapshot ' + (snapshots.length+1));
-    const s = currentMode==='basic' ? basicState() : advancedState();
-    const r = calcDPS(s);
-    snapshots.push({name, mode: currentMode, dps: r.dps, state: s});
-    nameInput.value = '';
-    saveSnapshotsToStorage();
-    renderCompare();
+function slotRarity(g){
+  if (!(g.name||'').trim()) return 'r-empty';
+  return g.mythic ? 'r-mythic' : 'r-item';
+}
+function pdSlotHTML(s){
+  const g = build.gear[s.id];
+  const n = (g.name||'').trim();
+  const activeW = s.weapon && build.activeWeapon === s.id;
+  const affixN = g.affixes.filter(a => num(a.value)).length;
+  const meta = s.weapon
+    ? (num(g.wMin)||num(g.wMax) ? num(g.wMin)+'–'+num(g.wMax) : 'no damage set')
+    : (affixN ? affixN + ' affix' + (affixN>1?'es':'') : '');
+  return '<button type="button" class="pd-slot '+slotRarity(g)+(activeW?' active-weapon':'')+'" data-slot="'+s.id+'" aria-label="'+esc(s.label+': '+(n||'empty'))+'">' +
+    (activeW ? '<span class="wpn-tag">WW</span>' : '') +
+    '<span class="s-lab">'+esc(s.label)+'</span>' +
+    '<span class="s-name">'+esc(n || '—')+'</span>' +
+    (meta ? '<span class="s-meta">'+esc(meta)+'</span>' : '') +
+  '</button>';
+}
+function renderPaperdoll(){
+  $('pdLeft').innerHTML   = GEAR_SLOTS.filter(s=>s.col==='L').map(pdSlotHTML).join('');
+  $('pdRight').innerHTML  = GEAR_SLOTS.filter(s=>s.col==='R').map(pdSlotHTML).join('');
+  $('pdArsenal').innerHTML= GEAR_SLOTS.filter(s=>s.col==='W').map(pdSlotHTML).join('');
+  document.querySelectorAll('[data-slot]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = $('slot-'+btn.dataset.slot);
+      if (!d) return;
+      const host = d.closest('details.plain');
+      if (host && !host.open) host.open = true;
+      d.open = true;
+      d.scrollIntoView({behavior:'smooth', block:'center'});
+      const inp = d.querySelector('[data-grole=name]');
+      if (inp) inp.focus({preventScroll:true});
+    });
   });
-  $('clearBtn').addEventListener('click', () => { snapshots = []; saveSnapshotsToStorage(); renderCompare(); });
-  $('exportBtn').addEventListener('click', () => {
-    const area = $('ioArea'); area.style.display = 'block';
-    area.value = JSON.stringify(snapshots, null, 2); area.select();
-  });
-  $('importBtn').addEventListener('click', () => {
-    const area = $('ioArea');
-    if (area.style.display !== 'block' || !area.value.trim()){ area.style.display='block'; area.value=''; area.focus(); return; }
-    try{ const parsed = JSON.parse(area.value); if (Array.isArray(parsed)){ snapshots = parsed; saveSnapshotsToStorage(); renderCompare(); area.style.display='none'; } }
-    catch(e){ alert('Could not read that JSON — check it was pasted in full.'); }
-  });
+}
 
-  loadSnapshotsFromStorage();
-  renderAdditives();
-  renderMults();
-  renderGearSlots();
-  compute();
+function affixHTML(slotId, a, i){
+  const opts = AFFIX_CATS.map(c => '<option value="'+c.v+'"'+(a.cat===c.v?' selected':'')+'>'+esc(c.l)+'</option>').join('');
+  return '<div class="affix">' +
+    '<input type="text" value="'+esc(a.label||'')+'" data-gs="'+slotId+'" data-gi="'+i+'" data-grole="alabel" placeholder="Affix name" aria-label="Affix name">' +
+    '<input type="number" value="'+num(a.value)+'" data-gs="'+slotId+'" data-gi="'+i+'" data-grole="avalue" step="1" aria-label="Affix value">' +
+    '<select data-gs="'+slotId+'" data-gi="'+i+'" data-grole="acat" aria-label="Affix type">'+opts+'</select>' +
+    '<button class="btn-icon" data-gs="'+slotId+'" data-gi="'+i+'" data-grole="adel" type="button" aria-label="Remove affix">✕</button>' +
+  '</div>';
+}
+
+function renderSlotEditors(){
+  const host = $('slotEditors');
+  host.innerHTML = GEAR_SLOTS.map(s => {
+    const g = build.gear[s.id];
+    const wf = s.weapon ? '<div class="grid g2" style="margin-bottom:10px;">' +
+        '<div class="field"><label for="wmin-'+s.id+'">Min damage</label><input type="number" id="wmin-'+s.id+'" data-gs="'+s.id+'" data-grole="wMin" value="'+num(g.wMin)+'" min="0"></div>' +
+        '<div class="field"><label for="wmax-'+s.id+'">Max damage</label><input type="number" id="wmax-'+s.id+'" data-gs="'+s.id+'" data-grole="wMax" value="'+num(g.wMax)+'" min="0"></div>' +
+      '</div>' : '';
+    const affixes = g.affixes.map((a,i) => affixHTML(s.id, a, i)).join('');
+    const named = (g.name||'').trim();
+    return '<details class="slot-edit" id="slot-'+s.id+'">' +
+      '<summary>'+esc(s.label)+'<span class="s-sum">'+esc(named || 'empty')+'</span></summary>' +
+      '<div class="slot-body">' +
+        '<div class="grid g2" style="margin-bottom:10px;">' +
+          '<div class="field"><label for="nm-'+s.id+'">Item name</label><input type="text" id="nm-'+s.id+'" data-gs="'+s.id+'" data-grole="name" value="'+esc(g.name||'')+'" placeholder="optional"></div>' +
+          '<div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:20px;">' +
+            '<input type="checkbox" data-gs="'+s.id+'" data-grole="mythic" '+(g.mythic?'checked':'')+'> Mythic Unique</label></div>' +
+        '</div>' + wf +
+        '<div>'+affixes+'</div>' +
+        '<button class="btn btn-sm" data-gs="'+s.id+'" data-grole="aadd" type="button" style="width:100%;margin-top:4px;">+ Add affix</button>' +
+      '</div></details>';
+  }).join('');
+
+  host.querySelectorAll('[data-grole]').forEach(node => {
+    const sid = node.dataset.gs, role = node.dataset.grole, gi = node.dataset.gi;
+    if (role === 'aadd'){
+      node.addEventListener('click', () => {
+        build.gear[sid].affixes.push({label:'', value:0, cat:'add:physical'});
+        renderSlotEditors(); const d = $('slot-'+sid); if (d) d.open = true; scheduleRender();
+      });
+    } else if (role === 'adel'){
+      node.addEventListener('click', () => {
+        build.gear[sid].affixes.splice(+gi,1);
+        renderSlotEditors(); const d = $('slot-'+sid); if (d) d.open = true; scheduleRender();
+      });
+    } else if (role === 'mythic'){
+      node.addEventListener('change', e => { build.gear[sid].mythic = e.target.checked; scheduleRender(); });
+    } else if (role === 'name'){
+      node.addEventListener('input', e => {
+        build.gear[sid].name = e.target.value;
+        const sum = e.target.closest('details').querySelector('.s-sum');
+        if (sum) sum.textContent = e.target.value.trim() || 'empty';
+        scheduleRender();
+      });
+    } else if (role === 'alabel'){
+      node.addEventListener('input', e => { build.gear[sid].affixes[+gi].label = e.target.value; });
+    } else if (role === 'avalue'){
+      node.addEventListener('input', e => { build.gear[sid].affixes[+gi].value = num(e.target.value); scheduleRender(); });
+    } else if (role === 'acat'){
+      node.addEventListener('change', e => { build.gear[sid].affixes[+gi].cat = e.target.value; scheduleRender(); });
+    } else if (role === 'wMin' || role === 'wMax'){
+      node.addEventListener('input', e => { build.gear[sid][role] = Math.max(0, num(e.target.value)); scheduleRender(); });
+    }
+  });
+}
+
+function renderWeaponSelect(){
+  const sel = $('activeWeapon');
+  sel.innerHTML = GEAR_SLOTS.filter(s => s.weapon).map(s => {
+    const nm = (build.gear[s.id].name||'').trim();
+    return '<option value="'+s.id+'"'+(build.activeWeapon===s.id?' selected':'')+'>' +
+      esc(s.label + (nm ? ' — ' + nm : '')) + '</option>';
+  }).join('');
+}
+
+// ==========================================================================
+// SNAPSHOTS
+// ==========================================================================
+const LS_KEY = 'd4ww.snapshots.v6';
+let snaps = [];
+function loadSnaps(){
+  try{ const raw = localStorage.getItem(LS_KEY); if (raw){ const p = JSON.parse(raw); if (Array.isArray(p)) snaps = p; } }
+  catch(e){ snaps = []; }
+}
+function saveSnaps(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(snaps)); }catch(e){}
+}
+function renderCompare(currentDps){
+  const tbl = $('cmpTable'), body = $('cmpBody'), empty = $('cmpEmpty');
+  if (!snaps.length){ tbl.style.display='none'; empty.style.display='block'; return; }
+  tbl.style.display=''; empty.style.display='none';
+  body.innerHTML = snaps.map((s,i) => {
+    const d = currentDps ? ((currentDps - s.dps) / s.dps * 100) : 0;
+    const cls = Math.abs(d) < 0.05 ? 'flat' : (d > 0 ? 'up' : 'down');
+    const txt = Math.abs(d) < 0.05 ? 'same' : (d>0?'+':'') + d.toFixed(1) + '%';
+    return '<tr><td>'+esc(s.name)+'</td><td class="c-dps">'+fmt(s.dps)+'</td>' +
+      '<td class="c-d '+cls+'">'+txt+'</td>' +
+      '<td style="text-align:right;white-space:nowrap;">' +
+        '<button class="btn-icon" data-si="'+i+'" data-srole="load" title="Load" aria-label="Load '+esc(s.name)+'">↺</button> ' +
+        '<button class="btn-icon" data-si="'+i+'" data-srole="del" title="Delete" aria-label="Delete '+esc(s.name)+'">✕</button>' +
+      '</td></tr>';
+  }).join('');
+  body.querySelectorAll('[data-srole]').forEach(b => {
+    const i = +b.dataset.si;
+    if (b.dataset.srole === 'del') b.addEventListener('click', () => { snaps.splice(i,1); saveSnaps(); render(); });
+    else b.addEventListener('click', () => {
+      try{ build = JSON.parse(JSON.stringify(snaps[i].build)); }catch(e){ return; }
+      migrate(build); syncInputs(); renderAll();
+    });
+  });
+}
+
+// Fill in anything a snapshot from an older shape is missing.
+function migrate(b){
+  const fresh = blankBuild();
+  Object.keys(fresh).forEach(k => { if (!(k in b)) b[k] = fresh[k]; });
+  b.stats = Object.assign(blankStats(), b.stats || {});
+  b.conds = Object.assign({berserk:false,fortified:false,healthy:false,cc:false,injured:false}, b.conds||{});
+  const g = blankGear();
+  Object.keys(g).forEach(k => { b.gear && b.gear[k] ? g[k] = Object.assign(g[k], b.gear[k]) : 0; });
+  b.gear = g;
+  if (!Array.isArray(b.mults) || !b.mults.length) b.mults = defaultMultipliers();
+  b.mults.forEach(m => { if (!m.prov) m.prov = 'community'; });
+  if (!GEAR_SLOTS.some(s => s.id === b.activeWeapon)) b.activeWeapon = 'w2h_blunt';
+}
+
+// ==========================================================================
+// WIRING
+// ==========================================================================
+function syncInputs(){
+  $('skillPct').value = num(build.skillPct);
+  $('strPer10').value = num(build.strPer10);
+  $('vulnUptime').value = num(build.vulnUptime);
+  $('vulnOut').textContent = num(build.vulnUptime) + '%';
+}
+function renderAll(){
+  renderWeaponSelect(); renderChips(); renderTargetSeg();
+  renderStats(); renderMults(); renderSlotEditors(); render();
+}
+
+$('skillPct').addEventListener('input', e => { build.skillPct = num(e.target.value); scheduleRender(); });
+$('strPer10').addEventListener('input', e => { build.strPer10 = num(e.target.value); scheduleRender(); });
+$('activeWeapon').addEventListener('change', e => { build.activeWeapon = e.target.value; scheduleRender(); });
+$('vulnUptime').addEventListener('input', e => {
+  build.vulnUptime = num(e.target.value); $('vulnOut').textContent = build.vulnUptime + '%'; scheduleRender();
+});
+$('btnAddMult').addEventListener('click', () => {
+  build.mults.push({id:'custom'+Date.now(), name:'New multiplier', pct:0, on:true, prov:'unverified'});
+  renderMults(); scheduleRender();
+});
+$('btnSample').addEventListener('click', () => { loadSample(); syncInputs(); renderAll(); });
+$('btnClear').addEventListener('click', () => { build = blankBuild(); syncInputs(); renderAll(); });
+$('btnSave').addEventListener('click', () => {
+  const r = computeDamage(build);
+  const nm = $('snapName').value.trim() || ('Build ' + (snaps.length + 1));
+  snaps.push({name:nm, dps:r.dps, build:JSON.parse(JSON.stringify(build))});
+  $('snapName').value = '';
+  saveSnaps(); render();
+});
+$('btnWipe').addEventListener('click', () => { snaps = []; saveSnaps(); render(); });
+$('btnExport').addEventListener('click', () => {
+  const a = $('io'); a.style.display='block'; a.value = JSON.stringify(snaps, null, 2); a.select();
+});
+$('btnImport').addEventListener('click', () => {
+  const a = $('io');
+  if (a.style.display !== 'block' || !a.value.trim()){ a.style.display='block'; a.value=''; a.focus(); return; }
+  try{
+    const p = JSON.parse(a.value);
+    if (Array.isArray(p)){ snaps = p; saveSnaps(); a.style.display='none'; render(); }
+  }catch(e){ alert('That JSON could not be read — check it pasted in full.'); }
+});
+
+loadSnaps();
+syncInputs();
+renderAll();
 })();
 </script>
 </body>
