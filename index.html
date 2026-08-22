@@ -265,6 +265,45 @@
   label .label-text{display:inline-flex;align-items:center;}
 
   .tab-note{text-align:center;font-size:11.5px;color:var(--bone-dim);margin:-14px 0 22px;line-height:1.6;}
+
+  /* ---- Paperdoll gear layout (Advanced Mode) ---- */
+  .paperdoll-wrap{display:grid;grid-template-columns:130px 1fr 130px;gap:14px 18px;align-items:start;margin-bottom:24px;}
+  @media(max-width:760px){.paperdoll-wrap{grid-template-columns:1fr 1fr;}}
+  @media(max-width:460px){.paperdoll-wrap{grid-template-columns:1fr;}}
+  .paperdoll-col{display:flex;flex-direction:column;gap:12px;align-items:center;}
+  .paperdoll-stage{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .paperdoll-silhouette{width:100%;max-width:170px;opacity:.9;}
+  .paperdoll-arsenal{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:280px;}
+
+  .pd-slot{
+    width:100%;max-width:96px;aspect-ratio:1;background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;
+    position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:6px;gap:3px;transition:border-color .15s, transform .15s;color:inherit;font-family:inherit;
+  }
+  .pd-slot::before,.pd-slot::after{content:"";position:absolute;width:8px;height:8px;border:1px solid var(--gold);opacity:.5;}
+  .pd-slot::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+  .pd-slot::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+  .pd-slot:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .pd-slot:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
+  .pd-slot .pd-icon{font-family:'Cinzel',serif;font-weight:700;font-size:15px;color:var(--bone-dim);line-height:1;}
+  .pd-slot .pd-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--bone-dim);}
+  .pd-slot .pd-name{font-size:9.5px;line-height:1.25;color:var(--bone);text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .pd-slot .pd-count{position:absolute;top:4px;right:5px;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--gold-bright);}
+  .pd-slot.rarity-empty{border-style:dashed;}
+  .pd-slot.rarity-empty .pd-icon{color:var(--steel);}
+  .pd-slot.rarity-item{border-color:var(--ember);}
+  .pd-slot.rarity-item .pd-icon{color:var(--ember-bright);}
+  .pd-slot.rarity-mythic{border-color:#a874d1;box-shadow:0 0 10px rgba(168,116,209,.25);}
+  .pd-slot.rarity-mythic .pd-icon{color:#c79ee8;}
+  .pd-slot.pd-arsenal-slot{max-width:58px;padding:4px;gap:2px;}
+  .pd-slot.pd-arsenal-slot .pd-icon{font-size:12px;}
+  .pd-slot.pd-arsenal-slot .pd-name{font-size:8px;-webkit-line-clamp:2;}
+  .pd-slot.pd-arsenal-slot .pd-label{display:none;}
+
+  .paperdoll-stats{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .pd-stat{background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;padding:8px 10px;}
+  .pd-stat .l{font-size:9.5px;color:var(--bone-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .pd-stat .v{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold-bright);font-weight:700;margin-top:2px;}
   .tab-note b{color:var(--bone-dim);}
 </style>
 </head>
@@ -416,13 +455,37 @@
 
     <div class="panel">
       <h2 class="panel-title"><span class="num">*</span>Equipped Gear<span class="line"></span></h2>
-      <p class="panel-desc">Open a slot, name the item if you like, and add one row per affix exactly as it reads on the tooltip. Pick the category that matches what the stat actually does — that's what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot below includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board. Item names below are pre-filled to match the confirmed Season 14 endgame loadout (see the v7 caveat in Section 4) — rename any slot that doesn't match your own gear, and add each item's actual affixes yourself since no numeric values were available to pre-fill.</p>
-      <div id="gearSlots"></div>
-    </div>
+      <p class="panel-desc">Click a slot below to jump straight to it, or scroll down to the full slot list. Name each item if you like, and add one row per affix exactly as it reads on the tooltip — the category you pick is what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board. Item names are pre-filled to match the confirmed Season 14 endgame loadout (see the v7 caveat in Section 4) — rename any slot that doesn't match your own gear, and add each item's actual affixes yourself since no numeric values were available to pre-fill.</p>
 
-    <div class="panel">
-      <h2 class="panel-title"><span class="num">*</span>Rolled-Up Totals<span class="line"></span></h2>
       <div class="adv-summary" id="advSummary"></div>
+
+      <div class="paperdoll-wrap">
+        <div class="paperdoll-col" id="pdLeft"></div>
+        <div class="paperdoll-stage">
+          <svg class="paperdoll-silhouette" viewBox="0 0 140 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="pdGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#d4af6a"/>
+                <stop offset="60%" stop-color="#a9803f"/>
+                <stop offset="100%" stop-color="#4a3b28"/>
+              </linearGradient>
+            </defs>
+            <circle cx="70" cy="112" r="88" fill="none" stroke="url(#pdGrad)" stroke-width="1" stroke-dasharray="2 7" opacity=".3"/>
+            <rect x="0" y="6" width="10" height="72" rx="2" fill="url(#pdGrad)" transform="rotate(-38 5 42)"/>
+            <path d="M40 62 L12 28 L21 20 L49 58 Z" fill="url(#pdGrad)"/>
+            <path d="M100 62 L126 98 L116 106 L92 70 Z" fill="url(#pdGrad)"/>
+            <path d="M46 130 L37 206 L55 206 L65 140 Z" fill="url(#pdGrad)"/>
+            <path d="M94 130 L103 206 L85 206 L75 140 Z" fill="url(#pdGrad)"/>
+            <path d="M40 58 L100 58 L94 130 L46 130 Z" fill="url(#pdGrad)"/>
+            <rect x="63" y="47" width="14" height="12" fill="url(#pdGrad)"/>
+            <circle cx="70" cy="33" r="17" fill="url(#pdGrad)"/>
+          </svg>
+          <div class="paperdoll-arsenal" id="pdArsenal"></div>
+        </div>
+        <div class="paperdoll-col" id="pdRight"></div>
+      </div>
+
+      <div id="gearSlots"></div>
     </div>
 
   </div>
@@ -775,12 +838,63 @@
       </div>`;
   }
 
+  // ---- Paperdoll: visual gear-slot summary, mirrors advGear, click to jump to its editor below ----
+  function pdSlotHTML(slotId, iconText, labelText, extraClass){
+    const g = advGear[slotId];
+    const name = g.name || '';
+    const rarity = !name.trim() ? 'rarity-empty' : (/mythic/i.test(name) ? 'rarity-mythic' : 'rarity-item');
+    const activeCount = g.affixes.filter(a=>a.on).length;
+    const countBadge = activeCount ? `<div class="pd-count">${activeCount}</div>` : '';
+    const ariaLabel = `${labelText}: ${name || 'empty'}${activeCount ? ', ' + activeCount + ' active affix' + (activeCount===1?'':'es') : ''} — click to edit`;
+    return `<button type="button" class="pd-slot ${rarity} ${extraClass||''}" data-pd-slot="${slotId}" aria-label="${ariaLabel}">
+      <div class="pd-icon">${iconText}</div>
+      <div class="pd-label">${labelText}</div>
+      <div class="pd-name">${name || '—'}</div>
+      ${countBadge}
+    </button>`;
+  }
+
+  function renderPaperdoll(){
+    const left = $('pdLeft'), right = $('pdRight'), arsenal = $('pdArsenal');
+    if (!left || !right || !arsenal) return;
+    left.innerHTML = [
+      pdSlotHTML('helm','H','Helm'),
+      pdSlotHTML('chest','C','Chest'),
+      pdSlotHTML('gloves','G','Gloves'),
+      pdSlotHTML('pants','P','Pants'),
+      pdSlotHTML('boots','B','Boots'),
+    ].join('');
+    right.innerHTML = [
+      pdSlotHTML('amulet','A','Amulet'),
+      pdSlotHTML('ring1','R1','Ring 1'),
+      pdSlotHTML('ring2','R2','Ring 2'),
+    ].join('');
+    arsenal.innerHTML = [
+      pdSlotHTML('weapon_2h_blunt','2H','2H Blunt','pd-arsenal-slot'),
+      pdSlotHTML('weapon_2h_slash','2H','2H Slash','pd-arsenal-slot'),
+      pdSlotHTML('weapon_1h_main','1H','1H Main','pd-arsenal-slot'),
+      pdSlotHTML('weapon_1h_off','1H','1H Off','pd-arsenal-slot'),
+    ].join('');
+    document.querySelectorAll('.pd-slot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const det = document.getElementById('gearslot-' + btn.dataset.pdSlot);
+        if (!det) return;
+        det.open = true;
+        det.scrollIntoView({behavior:'smooth', block:'center'});
+        const nameInput = det.querySelector('[data-role=itemname]');
+        if (nameInput) nameInput.focus({preventScroll:true});
+      });
+    });
+  }
+
   function renderGearSlots(){
     const wrap = $('gearSlots'); wrap.innerHTML = '';
     GEAR_SLOTS.forEach(slot => {
       const g = advGear[slot.id];
       const det = document.createElement('details');
       det.className = 'gear-slot';
+      det.id = 'gearslot-' + slot.id;
+      det.dataset.slot = slot.id;
       if (slot.id === 'weapon_2h_blunt' || slot.id === 'base') det.open = true;
 
       const affixHTML = g.affixes.map((a,i) => affixRowHTML(slot.id, i, a)).join('');
@@ -808,11 +922,24 @@
       wrap.appendChild(det);
     });
 
-    wrap.querySelectorAll('[data-role=itemname]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].name = e.target.value; }));
+    wrap.querySelectorAll('[data-role=itemname]').forEach(el => el.addEventListener('input', e => {
+      const slotId = e.target.dataset.slot;
+      advGear[slotId].name = e.target.value;
+      const sub = e.target.closest('.gear-slot')?.querySelector('.slot-sub');
+      if (sub) sub.textContent = `${advGear[slotId].name || 'unnamed'} · ${advGear[slotId].affixes.filter(a=>a.on).length} active`;
+      renderPaperdoll();
+    }));
     wrap.querySelectorAll('[data-role=wMin]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].wMin = Math.max(0, parseFloat(e.target.value)||0); compute(); }));
     wrap.querySelectorAll('[data-role=wMax]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].wMax = Math.max(0, parseFloat(e.target.value)||0); compute(); }));
     wrap.querySelectorAll('[data-role=category]').forEach(el => el.addEventListener('change', e => { advGear[e.target.dataset.slot].category = e.target.value; compute(); }));
-    wrap.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].on = e.target.checked; compute(); }));
+    wrap.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => {
+      const slotId = e.target.dataset.slot;
+      advGear[slotId].affixes[+e.target.dataset.i].on = e.target.checked;
+      const sub = e.target.closest('.gear-slot')?.querySelector('.slot-sub');
+      if (sub) sub.textContent = `${advGear[slotId].name || 'unnamed'} · ${advGear[slotId].affixes.filter(a=>a.on).length} active`;
+      renderPaperdoll();
+      compute();
+    }));
     wrap.querySelectorAll('[data-role=label]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].label = e.target.value; }));
     wrap.querySelectorAll('[data-role=value]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].value = parseFloat(e.target.value)||0; compute(); }));
     wrap.querySelectorAll('[data-role=cat]').forEach(el => el.addEventListener('change', e => { advGear[e.target.dataset.slot].affixes[+e.target.dataset.i].cat = e.target.value; compute(); }));
@@ -821,6 +948,7 @@
       advGear[e.target.dataset.slot].affixes.push({label:'New Affix', value:0, cat:'add', on:true});
       renderGearSlots(); compute();
     }));
+    renderPaperdoll();
   }
 
   function advancedState(){
