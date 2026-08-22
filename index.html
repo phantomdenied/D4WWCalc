@@ -451,7 +451,8 @@
     </div>
     <div class="hint">
       <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Damage-bucket structure was cross-referenced against multiple damage guides: Critical Strike Damage and Vulnerable Damage bonuses are <em>additive</em> into the same bucket as your other <code>+%</code> stats, while the base Critical (<code>×1.5</code>) and Vulnerable (<code>×1.2</code>) effects are separate fixed multipliers. Strength is its own multiplicative bucket. The engine implements exactly this.</p>
-      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. Preloaded multiplier values (Berserking, Wrath of the Berserker, Gohr's, Tuskhelm, Decimator) carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips — check each against your own game and correct it. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
+      <p style="margin:0 0 9px;"><strong>Fixed this pass.</strong> A Unique/Mythic item's power used to live in a separate Multipliers row with no connection to whether the item was actually equipped — equipping Ramaladni's Magnum Opus or Ring of Starless Skies on a gear slot did nothing unless you separately found and enabled a same-named row elsewhere, and the shipped sample build itself demonstrated this (both were "equipped" but contributed zero damage). Each known Unique/Mythic power now lives directly on its gear slot's editor — selecting it there is what applies it, and its live value is shown on the paperdoll slot itself. A second bug was fixed alongside it: loading the sample build handed out live references to its arrays/objects, so editing a loaded sample would silently corrupt the built-in sample for the rest of the session.</p>
+      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. The four gear-bound Unique/Mythic values (Ramaladni's Magnum Opus, Ring of Starless Skies, Gohr's, Tuskhelm) and the Berserking/Wrath of the Berserker multipliers carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips this pass — check each against your own game. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
       <p style="margin:0;"><strong>Why not more.</strong> This build ran without network access to Diablo databases and build-planner sites, so per-item affix values, Paragon node values, and glyph scaling could not be pulled. Anything item-specific has to come off your own character sheet. Nothing here is invented to fill a gap — where a number is unknown it is 0 and flagged.</p>
     </div>
   </div>
@@ -559,14 +560,13 @@ const STAT_DEFS = [
 ];
 
 // Multiplier presets. pct 0 + prov 'unverified' means: we do not know, user supplies.
+// Skills/buffs and generic Aspects only - anything that's a specific Unique or
+// Mythic item's power lives on that item's gear slot instead (see KNOWN_UNIQUES),
+// so equipping the item is what applies it rather than a same-named row here.
 function defaultMultipliers(){
   return [
     {id:'berserking', name:'Berserking',                  pct:25, on:true,  prov:'community', cond:'berserk'},
     {id:'wotb',       name:'Wrath of the Berserker',      pct:30, on:false, prov:'community', cond:'berserk'},
-    {id:'rmo',        name:"Ramaladni's Magnum Opus",     pct:0,  on:false, prov:'community', special:'rmo', maxFury:150, perFury:0.425},
-    {id:'ross',       name:'Ring of Starless Skies',      pct:0,  on:false, prov:'community', special:'ross', stacks:3},
-    {id:'gohrs',      name:"Gohr's Devastating Grips",    pct:82, on:false, prov:'community'},
-    {id:'tuskhelm',   name:'Tuskhelm of Joritz the Mighty',pct:42,on:false, prov:'community'},
     {id:'channel',    name:'Aspect of Channeling',        pct:0,  on:false, prov:'unverified'},
     {id:'anger',      name:'Aspect of Anger Management',  pct:0,  on:false, prov:'unverified'},
     {id:'crushing',   name:'Aspect of Crushing',          pct:0,  on:false, prov:'unverified', cond:'fortified'},
@@ -597,6 +597,27 @@ const AFFIX_CATS = [
   {v:'mult',       l:'Multiplier x%'},
 ].concat(STAT_DEFS.map(s => ({v:'add:'+s.key, l:s.label+' %'})));
 
+// Unique/Mythic items whose effect is a real formula, not just a flat number.
+// This is what an item's power actually IS - selecting it on a gear slot is
+// what turns the math on, not a same-named row somewhere else in the UI.
+const KNOWN_UNIQUES = {
+  none:     {name:'— none / generic item —'},
+  rmo:      {name:"Ramaladni's Magnum Opus", prov:'community', special:'rmo'},
+  ross:     {name:'Ring of Starless Skies',  prov:'community', special:'ross'},
+  gohrs:    {name:"Gohr's Devastating Grips",prov:'community', flat:82},
+  tuskhelm: {name:'Tuskhelm of Joritz the Mighty', prov:'community', flat:42},
+};
+
+function blankPower(){ return {id:'none', pct:0, maxFury:150, perFury:0.425, stacks:3}; }
+function resolveGearPower(p){
+  const def = KNOWN_UNIQUES[p.id];
+  if (!def) return 0;
+  if (def.special === 'rmo')  return Math.max(0, num(p.maxFury)) * Math.max(0, num(p.perFury));
+  if (def.special === 'ross') return clamp(Math.round(num(p.stacks)), 0, 5) * 10;
+  if (def.flat != null) return def.flat;
+  return 0;
+}
+
 // Sample build - clearly a sample, loadable/clearable, not presented as truth.
 const SAMPLE = {
   skillPct:60, strPer10:10, activeWeapon:'w2h_blunt', vulnUptime:90, target:'elite',
@@ -605,16 +626,16 @@ const SAMPLE = {
          elite:0, boss:0, cc:0, injured:0, fortified:0, healthy:0},
   strength:2500, critChance:80, as1:0, as2:0,
   gear:{
-    helm:{name:'Tuskhelm of Joritz the Mighty', mythic:true, affixes:[]},
-    gloves:{name:"Gohr's Devastating Grips", mythic:true, affixes:[]},
-    pants:{name:"Tibault's Will", mythic:true, affixes:[]},
-    amulet:{name:'Melted Heart of Selig', mythic:true, affixes:[]},
-    ring2:{name:'Ring of Starless Skies', mythic:false, affixes:[]},
-    w2h_blunt:{name:'2H Mace — Channeling', wMin:620, wMax:930, affixes:[]},
-    w2h_slash:{name:'The Grandfather', mythic:true, wMin:0, wMax:0, affixes:[]},
-    w1h_main:{name:"Ramaladni's Magnum Opus", mythic:true, wMin:0, wMax:0, affixes:[]},
+    helm:{name:'Tuskhelm of Joritz the Mighty', mythic:true, power:{id:'tuskhelm'}},
+    gloves:{name:"Gohr's Devastating Grips", mythic:true, power:{id:'gohrs'}},
+    pants:{name:"Tibault's Will", mythic:true},
+    amulet:{name:'Melted Heart of Selig', mythic:true},
+    ring2:{name:'Ring of Starless Skies', mythic:false, power:{id:'ross', stacks:3}},
+    w2h_blunt:{name:'2H Mace — Channeling', wMin:620, wMax:930},
+    w2h_slash:{name:'The Grandfather', mythic:true, wMin:0, wMax:0},
+    w1h_main:{name:"Ramaladni's Magnum Opus", mythic:true, wMin:0, wMax:0, power:{id:'rmo', maxFury:150, perFury:0.425}},
   },
-  multsOn:['berserking','wotb','gohrs','tuskhelm'],
+  multsOn:['berserking','wotb'],
 };
 
 // ==========================================================================
@@ -623,7 +644,7 @@ const SAMPLE = {
 function blankGear(){
   const g = {};
   GEAR_SLOTS.forEach(s => {
-    g[s.id] = {name:'', mythic:false, affixes:[]};
+    g[s.id] = {name:'', mythic:false, affixes:[], power:blankPower()};
     if (s.weapon){ g[s.id].wMin = 0; g[s.id].wMax = 0; }
   });
   return g;
@@ -645,14 +666,23 @@ function blankBuild(){
 let build = blankBuild();
 
 function loadSample(){
+  // Deep-clone SAMPLE - a shallow Object.assign would hand out live references
+  // to SAMPLE's own arrays/objects (affixes, power), so editing a loaded sample
+  // build would permanently mutate the shipped constant for the rest of the tab.
+  const s = JSON.parse(JSON.stringify(SAMPLE));
   const b = blankBuild();
-  b.skillPct = SAMPLE.skillPct; b.strPer10 = SAMPLE.strPer10;
-  b.activeWeapon = SAMPLE.activeWeapon; b.vulnUptime = SAMPLE.vulnUptime; b.target = SAMPLE.target;
-  Object.assign(b.conds, SAMPLE.conds);
-  Object.assign(b.stats, SAMPLE.stats);
-  b.strength = SAMPLE.strength; b.critChance = SAMPLE.critChance;
-  Object.keys(SAMPLE.gear).forEach(k => { if (b.gear[k]) Object.assign(b.gear[k], SAMPLE.gear[k]); });
-  b.mults.forEach(m => { m.on = SAMPLE.multsOn.indexOf(m.id) !== -1; });
+  b.skillPct = s.skillPct; b.strPer10 = s.strPer10;
+  b.activeWeapon = s.activeWeapon; b.vulnUptime = s.vulnUptime; b.target = s.target;
+  Object.assign(b.conds, s.conds);
+  Object.assign(b.stats, s.stats);
+  b.strength = s.strength; b.critChance = s.critChance;
+  Object.keys(s.gear).forEach(k => {
+    if (!b.gear[k]) return;
+    Object.assign(b.gear[k], s.gear[k]);
+    b.gear[k].power = Object.assign(blankPower(), s.gear[k].power);
+    b.gear[k].affixes = s.gear[k].affixes || [];
+  });
+  b.mults.forEach(m => { m.on = s.multsOn.indexOf(m.id) !== -1; });
   build = b;
 }
 
@@ -680,11 +710,7 @@ function conditionMet(cond, b){
   return !!b.conds[cond];
 }
 
-function resolveMult(m){
-  if (m.special === 'rmo')  return Math.max(0, num(m.maxFury)) * Math.max(0, num(m.perFury));
-  if (m.special === 'ross') return clamp(Math.round(num(m.stacks)), 0, 5) * 10;
-  return num(m.pct);
-}
+function resolveMult(m){ return num(m.pct); }
 
 // Roll gear + manual entry into one set of totals.
 function rollup(b){
@@ -712,6 +738,11 @@ function rollup(b){
         if (k in t.stats) t.stats[k] += v;
       }
     });
+    // This slot's Unique/Mythic power - equipping the item IS what applies it.
+    if (g.power && g.power.id && g.power.id !== 'none'){
+      const pct = resolveGearPower(g.power);
+      if (pct) t.gearMults.push({name:(KNOWN_UNIQUES[g.power.id]||{}).name || s.label, pct, cond:'always'});
+    }
   });
   return t;
 }
@@ -943,26 +974,13 @@ function multRowHTML(m, i){
   const blocked = m.cond && !conditionMet(m.cond, build);
   const cls = 'mrow' + (blocked ? ' blocked' : (m.on ? '' : ' off'));
   const why = blocked ? '<span class="why">needs ' + esc(CONDITIONS[m.cond].label) + '</span>' : '';
-  const valField = m.special
-    ? '<span class="mval">'+resolveMult(m).toFixed(1)+'%</span>'
-    : '<input type="number" data-mi="'+i+'" data-mrole="pct" step="1" value="'+num(m.pct)+'" aria-label="'+esc(m.name)+' percent">';
-  let sub = '';
-  if (m.special === 'rmo'){
-    sub = '<div class="msub">' +
-      '<div class="field"><label for="rmo-fury-'+i+'">Max Fury</label><input type="number" id="rmo-fury-'+i+'" data-mi="'+i+'" data-mrole="maxFury" value="'+num(m.maxFury)+'" min="0"></div>' +
-      '<div class="field"><label for="rmo-per-'+i+'">% per Fury</label><input type="number" id="rmo-per-'+i+'" data-mi="'+i+'" data-mrole="perFury" value="'+num(m.perFury)+'" min="0" max="1" step="0.005"></div>' +
-      '<span class="note">= '+resolveMult(m).toFixed(1)+'%</span></div>';
-  } else if (m.special === 'ross'){
-    sub = '<div class="msub">' +
-      '<div class="field"><label for="ross-'+i+'">Stacks (0–5)</label><input type="number" id="ross-'+i+'" data-mi="'+i+'" data-mrole="stacks" value="'+num(m.stacks)+'" min="0" max="5" step="1"></div>' +
-      '<span class="note">= '+resolveMult(m).toFixed(0)+'%</span></div>';
-  }
+  const valField = '<input type="number" data-mi="'+i+'" data-mrole="pct" step="1" value="'+num(m.pct)+'" aria-label="'+esc(m.name)+' percent">';
   return '<div class="'+cls+'">' +
     '<input type="checkbox" data-mi="'+i+'" data-mrole="on" '+(m.on?'checked':'')+' '+(blocked?'disabled':'')+' aria-label="Enable '+esc(m.name)+'">' +
     '<span class="mname"><span class="prov prov-'+m.prov+'" title="'+esc(provTitle(m.prov))+'"></span>'+esc(m.name)+why+'</span>' +
     valField +
     '<button class="btn-icon" data-mi="'+i+'" data-mrole="del" type="button" aria-label="Remove '+esc(m.name)+'">✕</button>' +
-    sub + '</div>';
+    '</div>';
 }
 function provTitle(p){
   return p === 'game' ? 'Core mechanic, cross-referenced'
@@ -980,11 +998,7 @@ function renderMults(){
     } else if (role === 'on'){
       node.addEventListener('change', e => { build.mults[i].on = e.target.checked; renderMults(); scheduleRender(); });
     } else {
-      node.addEventListener('input', e => {
-        build.mults[i][role] = num(e.target.value);
-        if (build.mults[i].special){ renderMults(); }
-        scheduleRender();
-      });
+      node.addEventListener('input', e => { build.mults[i][role] = num(e.target.value); scheduleRender(); });
     }
   });
 }
@@ -998,9 +1012,12 @@ function pdSlotHTML(s){
   const n = (g.name||'').trim();
   const activeW = s.weapon && build.activeWeapon === s.id;
   const affixN = g.affixes.filter(a => num(a.value)).length;
-  const meta = s.weapon
-    ? (num(g.wMin)||num(g.wMax) ? num(g.wMin)+'–'+num(g.wMax) : 'no damage set')
-    : (affixN ? affixN + ' affix' + (affixN>1?'es':'') : '');
+  const powerOn = g.power && g.power.id && g.power.id !== 'none';
+  const bits = [];
+  if (s.weapon) bits.push(num(g.wMin)||num(g.wMax) ? num(g.wMin)+'–'+num(g.wMax) : 'no damage set');
+  if (affixN) bits.push(affixN + ' affix' + (affixN>1?'es':''));
+  if (powerOn) bits.push('power ×' + (1+resolveGearPower(g.power)/100).toFixed(2));
+  const meta = bits.join(' · ');
   return '<button type="button" class="pd-slot '+slotRarity(g)+(activeW?' active-weapon':'')+'" data-slot="'+s.id+'" aria-label="'+esc(s.label+': '+(n||'empty'))+'">' +
     (activeW ? '<span class="wpn-tag">WW</span>' : '') +
     '<span class="s-lab">'+esc(s.label)+'</span>' +
@@ -1036,6 +1053,29 @@ function affixHTML(slotId, a, i){
   '</div>';
 }
 
+function powerFieldHTML(s, g){
+  const p = g.power || blankPower();
+  const opts = Object.keys(KNOWN_UNIQUES).map(id =>
+    '<option value="'+id+'"'+(p.id===id?' selected':'')+'>'+esc(KNOWN_UNIQUES[id].name)+'</option>'
+  ).join('');
+  const def = KNOWN_UNIQUES[p.id];
+  let sub = '';
+  if (def && def.special === 'rmo'){
+    sub = '<div class="grid g2" style="margin-top:8px;">' +
+      '<div class="field"><label for="pw-fury-'+s.id+'">Max Fury</label><input type="number" id="pw-fury-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-maxFury" value="'+num(p.maxFury)+'" min="0"></div>' +
+      '<div class="field"><label for="pw-per-'+s.id+'">% per Fury</label><input type="number" id="pw-per-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-perFury" value="'+num(p.perFury)+'" min="0" max="1" step="0.005"></div>' +
+      '</div><div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(1)+'% — check against your own tooltip.</div>';
+  } else if (def && def.special === 'ross'){
+    sub = '<div class="field" style="margin-top:8px;max-width:160px;"><label for="pw-stacks-'+s.id+'">Stacks (0–5)</label>' +
+      '<input type="number" id="pw-stacks-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-stacks" value="'+num(p.stacks)+'" min="0" max="5" step="1"></div>' +
+      '<div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(0)+'% (10%/stack while spending Fury, capped 50%)</div>';
+  } else if (def && def.flat != null){
+    sub = '<div class="hint" style="margin-top:8px;">Fixed at '+def.flat+'% <span class="prov prov-community" title="Community value, not re-verified"></span> — not adjustable, since this is a flat effect. Confirm against your own tooltip.</div>';
+  }
+  return '<div class="field"><label for="pw-'+s.id+'">Unique / Mythic power</label>' +
+    '<select id="pw-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-id">'+opts+'</select></div>' + sub;
+}
+
 function renderSlotEditors(){
   const host = $('slotEditors');
   host.innerHTML = GEAR_SLOTS.map(s => {
@@ -1054,6 +1094,7 @@ function renderSlotEditors(){
           '<div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:20px;">' +
             '<input type="checkbox" data-gs="'+s.id+'" data-grole="mythic" '+(g.mythic?'checked':'')+'> Mythic Unique</label></div>' +
         '</div>' + wf +
+        '<div style="margin-bottom:12px;padding:10px;background:var(--surface-3);border-radius:4px;">'+powerFieldHTML(s, g)+'</div>' +
         '<div>'+affixes+'</div>' +
         '<button class="btn btn-sm" data-gs="'+s.id+'" data-grole="aadd" type="button" style="width:100%;margin-top:4px;">+ Add affix</button>' +
       '</div></details>';
@@ -1073,6 +1114,17 @@ function renderSlotEditors(){
       });
     } else if (role === 'mythic'){
       node.addEventListener('change', e => { build.gear[sid].mythic = e.target.checked; scheduleRender(); });
+    } else if (role === 'pw-id'){
+      node.addEventListener('change', e => {
+        build.gear[sid].power = Object.assign(blankPower(), {id:e.target.value});
+        renderSlotEditors(); const d = $('slot-'+sid); if (d) d.open = true; scheduleRender();
+      });
+    } else if (role === 'pw-maxFury' || role === 'pw-perFury' || role === 'pw-stacks'){
+      node.addEventListener('input', e => {
+        const key = role.slice(3);
+        build.gear[sid].power[key] = num(e.target.value);
+        renderSlotEditors(); const d = $('slot-'+sid); if (d) d.open = true; scheduleRender();
+      });
     } else if (role === 'name'){
       node.addEventListener('input', e => {
         build.gear[sid].name = e.target.value;
