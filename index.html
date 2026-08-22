@@ -12,6 +12,7 @@
     --hairline:#4a3b28; --gold:#a9803f; --gold-bright:#d4af6a;
     --bone:#d9cdb8; --bone-dim:#8f8574; --blood:#8f2323; --blood-bright:#c93f3f;
     --ember:#c9622a; --ember-bright:#f2913f; --steel:#5c6a72; --sage:#5e8a6e;
+    --sage-text:#7fbf90; --blood-text:#e8706a;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -54,7 +55,7 @@
   .panel::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
   .panel-title{
     font-family:'Cinzel',serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--gold-bright);display:flex;align-items:center;gap:10px;margin-bottom:6px;
+    color:var(--gold-bright);display:flex;align-items:center;gap:10px;margin:0 0 6px;
   }
   .panel-title .num{
     font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--void);background:var(--gold);
@@ -70,7 +71,7 @@
   .field{display:flex;flex-direction:column;gap:6px;}
   .field.span2{grid-column:span 2;}
   label{font-size:11.5px;color:var(--bone-dim);letter-spacing:.03em;display:flex;justify-content:space-between;align-items:baseline;}
-  label .hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);}
+  label .hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);}
 
   input[type=number],input[type=text],select{
     background:var(--void);border:1px solid var(--hairline);color:var(--bone);
@@ -98,7 +99,7 @@
   .dyn-row input[type=text]:focus{box-shadow:none;border-bottom:1px solid var(--gold);}
   .pct-wrap{display:flex;align-items:center;gap:2px;}
   .dyn-row input[type=number]{padding:6px 6px;font-size:13px;text-align:right;}
-  .dyn-remove{background:none;border:none;color:var(--steel);cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:2px;transition:color .15s, background .15s;}
+  .dyn-remove{background:none;border:none;color:var(--bone-dim);cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:2px;transition:color .15s, background .15s;}
   .dyn-remove:hover{color:var(--blood-bright);background:rgba(143,35,35,.15);}
   .add-row{margin-top:12px;background:none;border:1px dashed var(--hairline);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.05em;padding:9px;border-radius:2px;cursor:pointer;width:100%;transition:all .15s;}
   .add-row:hover{border-color:var(--gold);background:rgba(169,128,63,.08);color:var(--gold-bright);}
@@ -130,7 +131,7 @@
   .gear-slot summary::-webkit-details-marker{display:none;}
   .gear-slot summary::before{content:"▸";color:var(--gold);font-size:11px;transition:transform .15s;}
   .gear-slot[open] summary::before{transform:rotate(90deg);}
-  .gear-slot summary .slot-sub{font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--steel);margin-left:auto;text-transform:none;letter-spacing:0;}
+  .gear-slot summary .slot-sub{font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--bone-dim);margin-left:auto;text-transform:none;letter-spacing:0;}
   .gear-slot-body{padding:4px 16px 16px;border-top:1px solid var(--hairline);}
   .gear-name-field{margin:12px 0 14px;}
   .weapon-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
@@ -198,7 +199,7 @@
   .dr-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--hairline);flex-wrap:wrap;}
   .dr-row label{font-size:11.5px;color:var(--bone-dim);display:flex;align-items:center;gap:7px;}
   .dr-row input[type=number]{width:70px;padding:6px 8px;font-size:12.5px;text-align:right;}
-  .dr-mitigated{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--steel);}
+  .dr-mitigated{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--bone-dim);}
   .dr-mitigated b{color:var(--bone);}
 
   .save-row{display:flex;gap:10px;margin-bottom:16px;}
@@ -213,23 +214,23 @@
   .compare-table tr.best-row{background:rgba(169,128,63,.09);}
   .compare-table .cname{color:var(--bone);font-weight:500;display:flex;align-items:center;gap:6px;}
   .best-badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--void);background:var(--gold-bright);padding:2px 6px;border-radius:8px;white-space:nowrap;}
-  .compare-table .cmode{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);}
+  .compare-table .cmode{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);}
   .compare-table .cdps{font-family:'JetBrains Mono',monospace;color:var(--ember-bright);font-weight:700;}
   .compare-table .cdelta{font-family:'JetBrains Mono',monospace;font-size:12px;}
-  .cdelta.up{color:var(--sage);} .cdelta.down{color:var(--blood-bright);} .cdelta.flat{color:var(--steel);}
+  .cdelta.up{color:var(--sage-text);} .cdelta.down{color:var(--blood-text);} .cdelta.flat{color:var(--bone-dim);}
   .compare-actions{display:flex;gap:6px;}
   .icon-btn{background:none;border:1px solid var(--hairline);color:var(--bone-dim);width:26px;height:26px;border-radius:2px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
   .icon-btn:hover{border-color:var(--gold);color:var(--gold-bright);}
-  .empty-note{color:var(--steel);font-size:12.5px;text-align:center;padding:18px 0;}
+  .empty-note{color:var(--bone-dim);font-size:12.5px;text-align:center;padding:18px 0;}
   .io-row{display:flex;gap:10px;margin-top:16px;border-top:1px solid var(--hairline);padding-top:14px;flex-wrap:wrap;}
-  .persist-note{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);margin-top:10px;}
+  .persist-note{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--bone-dim);margin-top:10px;}
   #ioArea{display:none;width:100%;margin-top:10px;background:var(--void);border:1px solid var(--hairline);color:var(--bone-dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px;border-radius:2px;min-height:80px;resize:vertical;}
-  footer{text-align:center;color:var(--steel);font-size:11.5px;margin-top:36px;line-height:1.7;}
+  footer{text-align:center;color:var(--bone-dim);font-size:11.5px;margin-top:36px;line-height:1.7;}
   .caveat{background:var(--panel-2);border:1px solid var(--hairline);border-left:3px solid var(--ember);border-radius:2px;padding:12px 14px;font-size:12px;color:var(--bone-dim);line-height:1.6;margin-bottom:18px;}
   .caveat b{color:var(--ember-bright);}
   .caveat ul{margin:8px 0 0;padding-left:18px;}
   .caveat li{margin-bottom:4px;}
-  .version-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);letter-spacing:.08em;text-transform:uppercase;margin-top:8px;}
+  .version-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bone-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:8px;}
 
   /* ---- Beginner guide ---- */
   .guide-panel{
@@ -243,7 +244,7 @@
   .guide-panel summary::-webkit-details-marker{display:none;}
   .guide-panel summary::before{content:"▸";color:var(--gold);font-size:12px;transition:transform .15s;}
   .guide-panel[open] summary::before{transform:rotate(90deg);}
-  .guide-panel summary .tiny{margin-left:auto;font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--steel);text-transform:none;letter-spacing:0;}
+  .guide-panel summary .tiny{margin-left:auto;font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--bone-dim);text-transform:none;letter-spacing:0;}
   .guide-body{padding:2px 20px 20px;font-size:13px;line-height:1.7;color:var(--bone-dim);border-top:1px solid var(--hairline);}
   .guide-body>p{margin:14px 0 0;}
   .guide-body b{color:var(--gold-bright);font-weight:600;}
@@ -255,14 +256,15 @@
 
   /* ---- inline help icon ---- */
   .qmark{
-    display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
-    border:1px solid var(--steel);color:var(--steel);font-size:9.5px;font-family:'JetBrains Mono',monospace;
-    cursor:help;margin-left:5px;flex:none;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    border:1px solid var(--bone-dim);color:var(--bone-dim);font-size:9.5px;font-family:'JetBrains Mono',monospace;
+    cursor:help;margin-left:5px;flex:none;line-height:1;background:none;padding:0;-webkit-appearance:none;appearance:none;
   }
   .qmark:hover{border-color:var(--gold);color:var(--gold-bright);}
+  .qmark:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;border-color:var(--gold);color:var(--gold-bright);}
   label .label-text{display:inline-flex;align-items:center;}
 
-  .tab-note{text-align:center;font-size:11.5px;color:var(--steel);margin:-14px 0 22px;line-height:1.6;}
+  .tab-note{text-align:center;font-size:11.5px;color:var(--bone-dim);margin:-14px 0 22px;line-height:1.6;}
   .tab-note b{color:var(--bone-dim);}
 </style>
 </head>
@@ -313,37 +315,37 @@
   <div class="mode-panel active" id="panelBasic">
 
     <div class="panel">
-      <div class="panel-title"><span class="num">1</span>Weapon &amp; Skill<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">1</span>Weapon &amp; Skill<span class="line"></span></h2>
       <div class="grid cols-3">
-        <div class="field"><label><span class="label-text">Weapon Min Dmg<span class="qmark" title="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here.">?</span></span></label><input type="number" id="wMin" value="620" min="0"></div>
-        <div class="field"><label><span class="label-text">Weapon Max Dmg<span class="qmark" title="Same tooltip as Min Dmg — enter the higher number of the two.">?</span></span></label><input type="number" id="wMax" value="930" min="0"></div>
-        <div class="field"><label><span class="label-text">Skill % <span class="qmark" title="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent.">?</span></span><span class="hint">advanced tooltip</span></label><input type="number" id="skillPct" value="60" step="0.1" min="0"></div>
-        <div class="field"><label><span class="label-text">Strength <span class="qmark" title="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage.">?</span></span><span class="hint">1% / 10 str</span></label><input type="number" id="strength" value="2500" min="0"></div>
-        <div class="field"><label><span class="label-text">Weapon Speed Category<span class="qmark" title="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip.">?</span></span></label>
+        <div class="field"><label for="wMin"><span class="label-text">Weapon Min Dmg<button type="button" class="qmark" title="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here." aria-label="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here.">?</button></span></label><input type="number" id="wMin" value="620" min="0"></div>
+        <div class="field"><label for="wMax"><span class="label-text">Weapon Max Dmg<button type="button" class="qmark" title="Same tooltip as Min Dmg — enter the higher number of the two." aria-label="Same tooltip as Min Dmg — enter the higher number of the two.">?</button></span></label><input type="number" id="wMax" value="930" min="0"></div>
+        <div class="field"><label for="skillPct"><span class="label-text">Skill % <button type="button" class="qmark" title="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent." aria-label="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent.">?</button></span><span class="hint">advanced tooltip</span></label><input type="number" id="skillPct" value="60" step="0.1" min="0"></div>
+        <div class="field"><label for="strength"><span class="label-text">Strength <button type="button" class="qmark" title="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage." aria-label="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage.">?</button></span><span class="hint">1% / 10 str</span></label><input type="number" id="strength" value="2500" min="0"></div>
+        <div class="field"><label for="wpCategory"><span class="label-text">Weapon Speed Category<button type="button" class="qmark" title="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip." aria-label="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip.">?</button></span></label>
           <select id="wpCategory">
             <option value="mace">2H Mace / Axe / Polearm</option>
             <option value="sword2h">2H Sword</option>
             <option value="dual">Dual Wield</option>
           </select>
         </div>
-        <div class="field"><label><span class="label-text">Total Attack Speed % <span class="qmark" title="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below.">?</span></span><span class="hint">Cap 1 + Cap 2 combined</span></label><input type="number" id="asTotal" value="0" step="1" min="0" max="200"></div>
+        <div class="field"><label for="asTotal"><span class="label-text">Total Attack Speed % <button type="button" class="qmark" title="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below." aria-label="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below.">?</button></span><span class="hint">Cap 1 + Cap 2 combined</span></label><input type="number" id="asTotal" value="0" step="1" min="0" max="200"></div>
       </div>
       <div class="subtotal"><span>Whirlwind APS — Season 14 frame breakpoint</span><b id="apsOut">0.900 (26f)</b></div>
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">2</span>Critical Strike &amp; Vulnerable<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">2</span>Critical Strike &amp; Vulnerable<span class="line"></span></h2>
       <p class="panel-desc">Always enter the <b>bottom</b> tooltip number for Crit Damage and Vulnerable Damage — the top number already bakes in the fixed multiplier this tool applies separately.</p>
       <div class="grid">
-        <div class="field"><label><span class="label-text">Critical Strike Chance <span class="qmark" title="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense.">?</span></span><span class="hint">fixed ×1.5 on crit</span></label><div class="slider-row"><input type="range" id="critChance" min="0" max="100" value="85" step="1"><span class="slider-val" id="critChanceVal">85%</span></div></div>
-        <div class="field"><label><span class="label-text">Vulnerable Uptime <span class="qmark" title="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic.">?</span></span><span class="hint">fixed ×1.2 while vuln</span></label><div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="vulnUptimeVal">90%</span></div></div>
-        <div class="field"><label><span class="label-text">Critical Strike Damage % <span class="qmark" title="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5.">?</span></span><span class="hint">bottom value</span></label><input type="number" id="critDmgAdd" value="410" min="0"></div>
-        <div class="field"><label><span class="label-text">Vulnerable Damage % <span class="qmark" title="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2.">?</span></span><span class="hint">bottom value</span></label><input type="number" id="vulnDmgAdd" value="450" min="0"></div>
+        <div class="field"><label for="critChance"><span class="label-text">Critical Strike Chance <button type="button" class="qmark" title="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense." aria-label="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense.">?</button></span><span class="hint">fixed ×1.5 on crit</span></label><div class="slider-row"><input type="range" id="critChance" min="0" max="100" value="85" step="1"><span class="slider-val" id="critChanceVal">85%</span></div></div>
+        <div class="field"><label for="vulnUptime"><span class="label-text">Vulnerable Uptime <button type="button" class="qmark" title="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic." aria-label="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic.">?</button></span><span class="hint">fixed ×1.2 while vuln</span></label><div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="vulnUptimeVal">90%</span></div></div>
+        <div class="field"><label for="critDmgAdd"><span class="label-text">Critical Strike Damage % <button type="button" class="qmark" title="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5." aria-label="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5.">?</button></span><span class="hint">bottom value</span></label><input type="number" id="critDmgAdd" value="410" min="0"></div>
+        <div class="field"><label for="vulnDmgAdd"><span class="label-text">Vulnerable Damage % <button type="button" class="qmark" title="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2." aria-label="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2.">?</button></span><span class="hint">bottom value</span></label><input type="number" id="vulnDmgAdd" value="450" min="0"></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">3</span>Additive Damage Bucket<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">3</span>Additive Damage Bucket<span class="line"></span></h2>
       <p class="panel-desc">Every stat relevant to Whirlwind Barbarian, pre-loaded. <b>Check on</b> whatever you actually have on your gear — unchecked rows are ignored but stay handy for later. Add anything missing at the bottom. These stats <b>add together</b> before anything else applies — e.g. turning on a +50% row and a +30% row gives one +80% bonus, never ×1.5 × ×1.3.</p>
       <div class="caveat">
         <b>The two Paragon rows below are guesses, not real numbers.</b> Current Season 14 Glyph and Legendary Node formulas aren't something I have reliable data for — my own knowledge may predate this season, and I couldn't reach maxroll.gg from this environment to verify (see the multiplier caveat above for why). <b>40%</b> and <b>20%</b> are round placeholders so the calculator has something to work with, not calculated or sourced values. Replace them with the real numbers off your own Paragon board tooltips as soon as you can — until then, treat any DPS figure using these two rows as a rough sketch, not a real estimate.
@@ -354,7 +356,7 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">4</span>Global [x]% Multipliers<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">4</span>Global [x]% Multipliers<span class="line"></span></h2>
       <p class="panel-desc">Stats written as <b>x%</b> rather than <b>+%</b> — each applies as its own independent factor: <b>Total = Π(1 + x%)</b>, not summed. Pre-loaded with every multiplier relevant to this build; check on what's active.</p>
       <div class="caveat" id="multCaveat">
         <b>v5 correction pass (sourced, Season 14):</b> several of these presets were shipped as rough placeholders in earlier versions and have now been replaced with current, sourced values or turned into small calculators where the real game mechanic isn't a flat number. See each row's inline hint. Full sourcing lives in the project's PLAN.md.
@@ -396,10 +398,10 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">*</span>Character-Level Inputs<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">*</span>Character-Level Inputs<span class="line"></span></h2>
       <div class="grid">
-        <div class="field"><label>Skill % <span class="hint">advanced tooltip, not gear-derived</span></label><input type="number" id="advSkillPct" value="60" step="0.1" min="0"></div>
-        <div class="field"><label>Weapon Powering Whirlwind <span class="hint">Arsenal selection</span></label>
+        <div class="field"><label for="advSkillPct">Skill % <span class="hint">advanced tooltip, not gear-derived</span></label><input type="number" id="advSkillPct" value="60" step="0.1" min="0"></div>
+        <div class="field"><label for="advPrimaryWeapon">Weapon Powering Whirlwind <span class="hint">Arsenal selection</span></label>
           <select id="advPrimaryWeapon">
             <option value="weapon_2h_blunt">Two-Handed Bludgeoning</option>
             <option value="weapon_2h_slash">Two-Handed Slashing</option>
@@ -407,18 +409,18 @@
             <option value="weapon_1h_off">One-Handed (Off)</option>
           </select>
         </div>
-        <div class="field span2"><label>Vulnerable Uptime <span class="hint">playstyle, not gear</span></label><div class="slider-row"><input type="range" id="advVulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="advVulnUptimeVal">90%</span></div></div>
+        <div class="field span2"><label for="advVulnUptime">Vulnerable Uptime <span class="hint">playstyle, not gear</span></label><div class="slider-row"><input type="range" id="advVulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="advVulnUptimeVal">90%</span></div></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">*</span>Equipped Gear<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">*</span>Equipped Gear<span class="line"></span></h2>
       <p class="panel-desc">Open a slot, name the item if you like, and add one row per affix exactly as it reads on the tooltip. Pick the category that matches what the stat actually does — that's what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot below includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board. Item names below are pre-filled to match the confirmed Season 14 endgame loadout (see the v7 caveat in Section 4) — rename any slot that doesn't match your own gear, and add each item's actual affixes yourself since no numeric values were available to pre-fill.</p>
       <div id="gearSlots"></div>
     </div>
 
     <div class="panel">
-      <div class="panel-title"><span class="num">*</span>Rolled-Up Totals<span class="line"></span></div>
+      <h2 class="panel-title"><span class="num">*</span>Rolled-Up Totals<span class="line"></span></h2>
       <div class="adv-summary" id="advSummary"></div>
     </div>
 
@@ -428,7 +430,7 @@
   <div class="results">
     <div class="eyebrow">Output</div>
     <div class="headline" id="dpsOut">0</div>
-    <div class="headline-label">Damage Per Second (unmitigated) <span class="qmark" title="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below.">?</span></div>
+    <div class="headline-label">Damage Per Second (unmitigated) <button type="button" class="qmark" title="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below." aria-label="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below.">?</button></div>
     <div class="result-strip">
       <div class="result-cell"><div class="v" id="avgHitOut">0</div><div class="l">Avg Hit</div></div>
       <div class="result-cell"><div class="v" id="nonCritOut">0</div><div class="l">No Crit / No Vuln</div></div>
@@ -442,18 +444,18 @@
       <div class="bk-row"><div class="bk-top"><span class="name">Crit · Vulnerable</span><span class="val" id="p-cv">0%</span></div><div class="bk-bar"><div class="bk-fill cv" id="bar-cv" style="width:0%"></div></div></div>
     </div>
     <div class="dr-row">
-      <label><input type="checkbox" id="drEnabled"> Show Enemy Damage Reduction <span class="qmark" title="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices.">?</span> (off by default — unmitigated DPS above is the primary number)</label>
-      <input type="number" id="drPct" value="85" min="0" max="99" step="0.1"> <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">% DR</span>
+      <label><input type="checkbox" id="drEnabled"> Show Enemy Damage Reduction <button type="button" class="qmark" title="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices." aria-label="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices.">?</button> (off by default — unmitigated DPS above is the primary number)</label>
+      <input type="number" id="drPct" value="85" min="0" max="99" step="0.1" aria-label="Enemy Damage Reduction percent"> <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">% DR</span>
     </div>
     <div class="dr-mitigated" id="drOut" style="display:none;"></div>
   </div>
 
   <!-- ---- Save & Compare ---- -->
   <div class="panel">
-    <div class="panel-title"><span class="num">6</span>Save &amp; Compare Builds<span class="line"></span></div>
+    <h2 class="panel-title"><span class="num">6</span>Save &amp; Compare Builds<span class="line"></span></h2>
     <p class="panel-desc">Works from either mode. Save a snapshot, change something, save again. The best DPS snapshot is highlighted below.</p>
     <div class="save-row">
-      <input type="text" id="saveName" placeholder="Name this snapshot, e.g. 'Before ring upgrade'">
+      <input type="text" id="saveName" placeholder="Name this snapshot, e.g. 'Before ring upgrade'" aria-label="Snapshot name">
       <button class="btn-gold" id="saveBtn" type="button">Save Snapshot</button>
     </div>
     <table class="compare-table" id="compareTable" style="display:none;">
@@ -613,10 +615,10 @@
     additives.forEach((a,i) => {
       const row = document.createElement('div'); row.className = 'dyn-row';
       row.innerHTML = `
-        <input type="checkbox" ${a.on?'checked':''} data-i="${i}" data-role="on">
-        <input type="text" value="${a.name}" data-i="${i}" data-role="name">
-        <div class="pct-wrap"><input type="number" value="${a.pct}" data-i="${i}" data-role="pct" step="1"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>
-        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove">✕</button>`;
+        <input type="checkbox" ${a.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${a.name} in additive total">
+        <input type="text" value="${a.name}" data-i="${i}" data-role="name" aria-label="Additive stat name">
+        <div class="pct-wrap"><input type="number" value="${a.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${a.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>
+        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${a.name}">✕</button>`;
       list.appendChild(row);
     });
     list.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { additives[+e.target.dataset.i].on = e.target.checked; compute(); }));
@@ -629,20 +631,20 @@
   function multSpecialHTML(m, i){
     if (m.special === 'rmo'){
       return `<div class="dyn-special">
-        <div class="mini-field"><label>Max Fury</label><input type="number" value="${m.maxFury}" min="0" data-i="${i}" data-role="rmoFury"></div>
-        <div class="mini-field"><label>%/Fury point</label><input type="number" value="${m.furyPct}" min="0" max="1" step="0.005" data-i="${i}" data-role="rmoPct"></div>
-        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--steel);">(0.35–0.50%/Fury, drains 10 Fury/sec — sanity check vs. your own tooltip)</span></div>
+        <div class="mini-field"><label for="rmoFury-${i}">Max Fury</label><input type="number" id="rmoFury-${i}" value="${m.maxFury}" min="0" data-i="${i}" data-role="rmoFury"></div>
+        <div class="mini-field"><label for="rmoPct-${i}">%/Fury point</label><input type="number" id="rmoPct-${i}" value="${m.furyPct}" min="0" max="1" step="0.005" data-i="${i}" data-role="rmoPct"></div>
+        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--bone-dim);">(0.35–0.50%/Fury, drains 10 Fury/sec — sanity check vs. your own tooltip)</span></div>
       </div>`;
     }
     if (m.special === 'ross'){
       return `<div class="dyn-special">
-        <div class="mini-field"><label>Active Stacks (0–5)</label><input type="number" value="${m.stacks}" min="0" max="5" step="1" data-i="${i}" data-role="rossStacks"></div>
-        <div class="computed">= ${resolveMultPct(m).toFixed(0)}% <span style="color:var(--steel);">(10%/stack while spending Fury, capped 50%)</span></div>
+        <div class="mini-field"><label for="rossStacks-${i}">Active Stacks (0–5)</label><input type="number" id="rossStacks-${i}" value="${m.stacks}" min="0" max="5" step="1" data-i="${i}" data-role="rossStacks"></div>
+        <div class="computed">= ${resolveMultPct(m).toFixed(0)}% <span style="color:var(--bone-dim);">(10%/stack while spending Fury, capped 50%)</span></div>
       </div>`;
     }
     if (m.special === 'bloodrage'){
       return `<div class="dyn-special">
-        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--steel);">(25% of your "Damage while Berserking" additive stat, capped 45% — edit that stat in section 3)</span></div>
+        <div class="computed">= ${resolveMultPct(m).toFixed(1)}% <span style="color:var(--bone-dim);">(25% of your "Damage while Berserking" additive stat, capped 45% — edit that stat in section 3)</span></div>
       </div>`;
     }
     return '';
@@ -654,12 +656,12 @@
       const row = document.createElement('div'); row.className = 'dyn-row';
       const pctFieldHTML = m.special
         ? `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`
-        : `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
+        : `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
       row.innerHTML = `
-        <input type="checkbox" ${m.on?'checked':''} data-i="${i}" data-role="on">
-        <input type="text" value="${m.name}" data-i="${i}" data-role="name">
+        <input type="checkbox" ${m.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${m.name} in multiplier total">
+        <input type="text" value="${m.name}" data-i="${i}" data-role="name" aria-label="Multiplier name">
         ${pctFieldHTML}
-        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove">✕</button>
+        <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${m.name}">✕</button>
         ${multSpecialHTML(m, i)}`;
       list.appendChild(row);
     });
@@ -748,11 +750,11 @@
     const opts = CATEGORIES.map(c => `<option value="${c.v}" ${a.cat===c.v?'selected':''}>${c.l}</option>`).join('');
     return `
       <div class="affix-row">
-        <input type="checkbox" ${a.on?'checked':''} data-slot="${slotId}" data-i="${i}" data-role="on">
-        <input type="text" value="${a.label}" data-slot="${slotId}" data-i="${i}" data-role="label">
-        <div class="pct-wrap"><input type="number" value="${a.value}" data-slot="${slotId}" data-i="${i}" data-role="value" step="1"></div>
-        <select data-slot="${slotId}" data-i="${i}" data-role="cat">${opts}</select>
-        <button class="dyn-remove" data-slot="${slotId}" data-i="${i}" data-role="remove" type="button">✕</button>
+        <input type="checkbox" ${a.on?'checked':''} data-slot="${slotId}" data-i="${i}" data-role="on" aria-label="Include ${a.label} in totals">
+        <input type="text" value="${a.label}" data-slot="${slotId}" data-i="${i}" data-role="label" aria-label="Affix name">
+        <div class="pct-wrap"><input type="number" value="${a.value}" data-slot="${slotId}" data-i="${i}" data-role="value" step="1" aria-label="${a.label} value"></div>
+        <select data-slot="${slotId}" data-i="${i}" data-role="cat" aria-label="${a.label} category">${opts}</select>
+        <button class="dyn-remove" data-slot="${slotId}" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${a.label}">✕</button>
       </div>`;
   }
 
@@ -767,10 +769,10 @@
       const affixHTML = g.affixes.map((a,i) => affixRowHTML(slot.id, i, a)).join('');
       const weaponFieldsHTML = slot.weapon ? `
         <div class="weapon-fields">
-          <div class="field"><label>Min Dmg</label><input type="number" data-slot="${slot.id}" data-role="wMin" value="${g.wMin}" min="0"></div>
-          <div class="field"><label>Max Dmg</label><input type="number" data-slot="${slot.id}" data-role="wMax" value="${g.wMax}" min="0"></div>
-          <div class="field"><label>Speed Category</label>
-            <select data-slot="${slot.id}" data-role="category">
+          <div class="field"><label for="wMin-${slot.id}">Min Dmg</label><input type="number" id="wMin-${slot.id}" data-slot="${slot.id}" data-role="wMin" value="${g.wMin}" min="0"></div>
+          <div class="field"><label for="wMax-${slot.id}">Max Dmg</label><input type="number" id="wMax-${slot.id}" data-slot="${slot.id}" data-role="wMax" value="${g.wMax}" min="0"></div>
+          <div class="field"><label for="category-${slot.id}">Speed Category</label>
+            <select id="category-${slot.id}" data-slot="${slot.id}" data-role="category">
               <option value="mace" ${g.category==='mace'?'selected':''}>2H Mace/Axe/Polearm</option>
               <option value="sword2h" ${g.category==='sword2h'?'selected':''}>2H Sword</option>
               <option value="dual" ${g.category==='dual'?'selected':''}>Dual Wield</option>
@@ -781,7 +783,7 @@
       det.innerHTML = `
         <summary>${slot.label}<span class="slot-sub">${g.name || 'unnamed'} · ${g.affixes.filter(a=>a.on).length} active</span></summary>
         <div class="gear-slot-body">
-          <div class="field gear-name-field"><label>Item Name <span class="hint">optional</span></label><input type="text" data-slot="${slot.id}" data-role="itemname" value="${g.name}" placeholder="e.g. Ramaladni's Magnum Opus"></div>
+          <div class="field gear-name-field"><label for="itemname-${slot.id}">Item Name <span class="hint">optional</span></label><input type="text" id="itemname-${slot.id}" data-slot="${slot.id}" data-role="itemname" value="${g.name}" placeholder="e.g. Ramaladni's Magnum Opus"></div>
           ${weaponFieldsHTML}
           <div class="dyn-list">${affixHTML}</div>
           <button class="add-affix" data-slot="${slot.id}" data-role="addaffix" type="button">+ Add Affix</button>
@@ -965,8 +967,8 @@
         <td class="cdps">${fmt(snap.dps)}</td>
         <td class="cdelta ${dclass}">${i===0?'baseline':sign+delta.toFixed(1)+'%'}</td>
         <td><div class="compare-actions">
-          <button class="icon-btn" data-role="load" data-i="${i}" title="Load">↺</button>
-          <button class="icon-btn" data-role="del" data-i="${i}" title="Delete">✕</button>
+          <button class="icon-btn" data-role="load" data-i="${i}" title="Load" aria-label="Load snapshot: ${snap.name}">↺</button>
+          <button class="icon-btn" data-role="del" data-i="${i}" title="Delete" aria-label="Delete snapshot: ${snap.name}">✕</button>
         </div></td>`;
       body.appendChild(tr);
     });
