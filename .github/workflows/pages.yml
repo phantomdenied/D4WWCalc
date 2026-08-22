@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ claude/user-friendly-redesign-d2rysn ]
+    branches: [ main, claude/user-friendly-redesign-d2rysn ]
   workflow_dispatch:
 
 permissions:
