@@ -345,6 +345,9 @@
     <div class="panel">
       <div class="panel-title"><span class="num">3</span>Additive Damage Bucket<span class="line"></span></div>
       <p class="panel-desc">Every stat relevant to Whirlwind Barbarian, pre-loaded. <b>Check on</b> whatever you actually have on your gear — unchecked rows are ignored but stay handy for later. Add anything missing at the bottom. These stats <b>add together</b> before anything else applies — e.g. turning on a +50% row and a +30% row gives one +80% bonus, never ×1.5 × ×1.3.</p>
+      <div class="caveat">
+        <b>The two Paragon rows below are guesses, not real numbers.</b> Current Season 14 Glyph and Legendary Node formulas aren't something I have reliable data for — my own knowledge may predate this season, and I couldn't reach maxroll.gg from this environment to verify (see the multiplier caveat above for why). <b>40%</b> and <b>20%</b> are round placeholders so the calculator has something to work with, not calculated or sourced values. Replace them with the real numbers off your own Paragon board tooltips as soon as you can — until then, treat any DPS figure using these two rows as a rough sketch, not a real estimate.
+      </div>
       <div class="dyn-list" id="addList"></div>
       <button class="add-row" id="addAddBtn" type="button">+ Add Additive Stat</button>
       <div class="subtotal"><span>Additive bucket total (checked only)</span><b id="addTotal">+0%</b></div>
@@ -552,6 +555,8 @@
     {name:"Damage to Stunned Enemies", pct: 0, on:false},
     {name:"Total Armor as Damage (misc.)", pct: 0, on:false},
     {name:"Masterwork Bonus (simplified flat stand-in)", pct: 0, on:false},
+    {name:"Paragon Glyphs, all 5 at assumed rank 100 (UNSOURCED GUESS)", pct: 40, on:false},
+    {name:"Paragon Legendary Nodes, 2nd effect assumed active (UNSOURCED GUESS)", pct: 20, on:false},
   ];
   // Global multipliers. `special` marks entries whose pct is computed live
   // from extra sub-fields rather than typed in directly — see renderMults().
