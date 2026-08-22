@@ -452,8 +452,9 @@
     <div class="hint">
       <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Damage-bucket structure was cross-referenced against multiple damage guides: Critical Strike Damage and Vulnerable Damage bonuses are <em>additive</em> into the same bucket as your other <code>+%</code> stats, while the base Critical (<code>×1.5</code>) and Vulnerable (<code>×1.2</code>) effects are separate fixed multipliers. Strength is its own multiplicative bucket. The engine implements exactly this.</p>
       <p style="margin:0 0 9px;"><strong>Fixed this pass.</strong> A Unique/Mythic item's power used to live in a separate Multipliers row with no connection to whether the item was actually equipped — equipping Ramaladni's Magnum Opus or Ring of Starless Skies on a gear slot did nothing unless you separately found and enabled a same-named row elsewhere, and the shipped sample build itself demonstrated this (both were "equipped" but contributed zero damage). Each known Unique/Mythic power now lives directly on its gear slot's editor — selecting it there is what applies it, and its live value is shown on the paperdoll slot itself. A second bug was fixed alongside it: loading the sample build handed out live references to its arrays/objects, so editing a loaded sample would silently corrupt the built-in sample for the rest of the session.</p>
-      <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Ramaladni's Magnum Opus was checked against its live tooltip (fextralife, 2026-08-22): "Skills using this weapon deal [0.35–0.50]% increased damage per point of Fury you have, but you lose 10 Fury every second." The engine's <code>maxFury × %perFury</code> formula matches; the two inputs now default to the midpoint of the confirmed roll range and are clamped to it. The Fury-drain clause isn't modeled as a rotational mechanic — "Max Fury" is still a static stand-in for sustained Fury, same simplification as before, just now on a confirmed base number.</p>
-      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. The remaining gear-bound Unique/Mythic values (Ring of Starless Skies, Gohr's, Tuskhelm) and the Berserking/Wrath of the Berserker multipliers carry over from this tool's earlier versions and were <em>not</em> re-verified against live tooltips this pass — check each against your own game. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
+      <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Ramaladni's Magnum Opus was checked against its live tooltip (fextralife, 2026-08-22): "Skills using this weapon deal [0.35–0.50]% increased damage per point of Fury you have, but you lose 10 Fury every second." The engine's <code>maxFury × %perFury</code> formula matches; the two inputs now default to the midpoint of the confirmed roll range and are clamped to it. The Fury-drain clause isn't modeled as a rotational mechanic — "Max Fury" is still a static stand-in for sustained Fury, same simplification as before, just now on a confirmed base number. Ring of Starless Skies was also checked (same source, same date): "Spending your Primary Resource ... increases your damage by 10% for 3 seconds, up to 50%" — matches the existing 10%/stack, 0–5 stacks, 50%-cap formula exactly, no change needed. Gohr's Devastating Grips ("Whirlwind deals [75–90%] increased damage") and Tuskhelm of Joritz the Mighty ("...granting [40–50%] increased damage...") were previously hardcoded flat guesses (82% and 42%) — both are actually roll ranges, so they're now user-adjustable within the confirmed range instead of fixed, same pattern as Ramaladni's. Berserking's own tooltip ("Increases your damage by 25% and your movement speed by 30%") also matches the existing 25% exactly.</p>
+      <p style="margin:0 0 9px;"><strong>Flagged this pass, not fixed with a guess.</strong> Wrath of the Berserker previously carried a flat +30% damage value, but its live tooltip ("Explode into rage, Knocking Back surrounding enemies while gaining Berserking and Unstoppable for 10 seconds") shows no separate damage bonus of its own — it just grants the Berserking status, which is already its own toggle above. Toggling both on, as the sample build did, may have been double-counting one real bonus as two. Rather than invent a replacement number, it's been zeroed and marked <i class="prov prov-unverified"></i> — confirm from your own character sheet whether WotB grants anything beyond Berserking before re-enabling it.</p>
+      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested: sources report both <code>10 Strength = 1%</code> and <code>10 Strength = 0.8%</code> damage. It's exposed as an input in Setup rather than hardcoded. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
       <p style="margin:0;"><strong>Why not more.</strong> This build ran without network access to Diablo databases and build-planner sites, so per-item affix values, Paragon node values, and glyph scaling could not be pulled. Anything item-specific has to come off your own character sheet. Nothing here is invented to fill a gap — where a number is unknown it is 0 and flagged.</p>
     </div>
   </div>
@@ -566,8 +567,19 @@ const STAT_DEFS = [
 // so equipping the item is what applies it rather than a same-named row here.
 function defaultMultipliers(){
   return [
-    {id:'berserking', name:'Berserking',                  pct:25, on:true,  prov:'community', cond:'berserk'},
-    {id:'wotb',       name:'Wrath of the Berserker',      pct:30, on:false, prov:'community', cond:'berserk'},
+    // Verified against live tooltip (fextralife, checked 2026-08-22): "Increases
+    // your damage by 25% and your movement speed by 30%." Matches exactly.
+    {id:'berserking', name:'Berserking',                  pct:25, on:true,  prov:'game', cond:'berserk'},
+    // NOT verified this pass, and flagged suspicious: Wrath of the Berserker's
+    // own live tooltip ("Explode into rage, Knocking Back surrounding enemies
+    // while gaining Berserking and Unstoppable for 10 seconds") shows no
+    // separate flat damage bonus - it just grants the Berserking status above.
+    // A same-named community value of 30% survives from an earlier tool
+    // version; toggling both this and Berserking on (as SAMPLE does) may be
+    // double-counting one real bonus as two. Left at 0 rather than guess -
+    // confirm from your own build whether WotB grants anything beyond Berserking
+    // before re-enabling this.
+    {id:'wotb',       name:'Wrath of the Berserker',      pct:0, on:false, prov:'unverified', cond:'berserk'},
     {id:'channel',    name:'Aspect of Channeling',        pct:0,  on:false, prov:'unverified'},
     {id:'anger',      name:'Aspect of Anger Management',  pct:0,  on:false, prov:'unverified'},
     {id:'crushing',   name:'Aspect of Crushing',          pct:0,  on:false, prov:'unverified', cond:'fortified'},
@@ -610,18 +622,31 @@ const KNOWN_UNIQUES = {
   // separately modeled; "Max Fury" here stands in for sustained Fury during the
   // fight, same simplification as before.
   rmo:      {name:"Ramaladni's Magnum Opus", prov:'game', special:'rmo'},
-  ross:     {name:'Ring of Starless Skies',  prov:'community', special:'ross'},
-  gohrs:    {name:"Gohr's Devastating Grips",prov:'community', flat:82},
-  tuskhelm: {name:'Tuskhelm of Joritz the Mighty', prov:'community', flat:42},
+  // Verified against live tooltip (fextralife, checked 2026-08-22): "Spending
+  // your Primary Resource ... increases your damage by 10% for 3 seconds, up to
+  // 50%." Matches the existing 10%/stack, 0-5 stacks, 50% cap formula exactly.
+  ross:     {name:'Ring of Starless Skies',  prov:'game', special:'ross'},
+  // Verified against live tooltip (fextralife, checked 2026-08-22): "Whirlwind
+  // deals [75-90%] increased damage." Was a hardcoded flat 82% (unverified
+  // approximation) - now a real roll range, so it's user-adjustable like RMO.
+  gohrs:    {name:"Gohr's Devastating Grips",prov:'game', special:'ranged', range:[75,90]},
+  // Verified against live tooltip (fextralife, checked 2026-08-22): "...granting
+  // [40-50%] increased damage..." Was a hardcoded flat 42% - now a real roll
+  // range, user-adjustable like RMO.
+  tuskhelm: {name:'Tuskhelm of Joritz the Mighty', prov:'game', special:'ranged', range:[40,50]},
 };
 
-function blankPower(){ return {id:'none', pct:0, maxFury:150, perFury:0.425, stacks:3}; }
+function blankPower(){ return {id:'none', pct:0, maxFury:150, perFury:0.425, stacks:3, rangedPct:null}; }
 function resolveGearPower(p){
   const def = KNOWN_UNIQUES[p.id];
   if (!def) return 0;
   if (def.special === 'rmo')  return Math.max(0, num(p.maxFury)) * Math.max(0, num(p.perFury));
   if (def.special === 'ross') return clamp(Math.round(num(p.stacks)), 0, 5) * 10;
-  if (def.flat != null) return def.flat;
+  if (def.special === 'ranged'){
+    const [lo, hi] = def.range;
+    const v = p.rangedPct == null ? (lo+hi)/2 : num(p.rangedPct);
+    return clamp(v, lo, hi);
+  }
   return 0;
 }
 
@@ -1075,9 +1100,13 @@ function powerFieldHTML(s, g){
   } else if (def && def.special === 'ross'){
     sub = '<div class="field" style="margin-top:8px;max-width:160px;"><label for="pw-stacks-'+s.id+'">Stacks (0–5)</label>' +
       '<input type="number" id="pw-stacks-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-stacks" value="'+num(p.stacks)+'" min="0" max="5" step="1"></div>' +
-      '<div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(0)+'% (10%/stack while spending Fury, capped 50%)</div>';
-  } else if (def && def.flat != null){
-    sub = '<div class="hint" style="margin-top:8px;">Fixed at '+def.flat+'% <span class="prov prov-community" title="Community value, not re-verified"></span> — not adjustable, since this is a flat effect. Confirm against your own tooltip.</div>';
+      '<div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(0)+'% <span class="prov prov-game" title="Verified against live tooltip"></span> (10%/stack while spending Fury, capped 50%, confirmed fextralife 2026-08-22)</div>';
+  } else if (def && def.special === 'ranged'){
+    const [lo, hi] = def.range;
+    const cur = p.rangedPct == null ? (lo+hi)/2 : num(p.rangedPct);
+    sub = '<div class="field" style="margin-top:8px;max-width:160px;"><label for="pw-ranged-'+s.id+'">Percent (roll '+lo+'–'+hi+')</label>' +
+      '<input type="number" id="pw-ranged-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-rangedPct" value="'+cur+'" min="'+lo+'" max="'+hi+'" step="0.5"></div>' +
+      '<div class="hint" style="margin-top:5px;">= '+resolveGearPower(p).toFixed(1)+'% <span class="prov prov-game" title="Verified against live tooltip"></span> — confirmed roll range is '+lo+'–'+hi+'% (fextralife, checked 2026-08-22); enter your own roll.</div>';
   }
   return '<div class="field"><label for="pw-'+s.id+'">Unique / Mythic power</label>' +
     '<select id="pw-'+s.id+'" data-gs="'+s.id+'" data-grole="pw-id">'+opts+'</select></div>' + sub;
@@ -1126,7 +1155,7 @@ function renderSlotEditors(){
         build.gear[sid].power = Object.assign(blankPower(), {id:e.target.value});
         renderSlotEditors(); const d = $('slot-'+sid); if (d) d.open = true; scheduleRender();
       });
-    } else if (role === 'pw-maxFury' || role === 'pw-perFury' || role === 'pw-stacks'){
+    } else if (role === 'pw-maxFury' || role === 'pw-perFury' || role === 'pw-stacks' || role === 'pw-rangedPct'){
       node.addEventListener('input', e => {
         const key = role.slice(3);
         build.gear[sid].power[key] = num(e.target.value);
