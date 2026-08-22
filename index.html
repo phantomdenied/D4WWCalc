@@ -420,7 +420,7 @@
           <li>Confirmed equipped: <b>Melted Heart of Selig</b> (Amulet, Mythic) with <b>Aspect of Anger Management</b> Transfigured onto it, <b>The Grandfather</b> (Mythic 2H Sword, alternate weapon set), and Legendary Aspects <b>Channeling, Heavy Hitting, Heavenly Strength, Battle-Mad,</b> and <b>Crushing</b> on the remaining weapon/chest/boots/ring slots. None of these have known % values, so they aren't added as new rows — Advanced Mode's gear slot names are pre-filled to match this loadout instead; fill in your own affix values there.</li>
           <li><b>Melted Heart of Selig requires zero Life on your gear</b> per the guide's own warning — the less Life you have, the less damage you take with this item equipped. Not modeled by this calculator (it doesn't do defense), just flagged so the gear-slot names don't look like an unexplained build choice.</li>
         </ul>
-        <b>v8 addition — Mythic Transfiguration toggle:</b> a Unique's special effect is normally a rolled/variable value, but Transfiguring it into its Mythic form fixes that effect to one known, universal number. <b>Gohr's Devastating Grips</b> and <b>Tuskhelm of Joritz the Mighty</b> below now have a "Transfigured to Mythic" checkbox that auto-locks their % to the sourced Mythic value — uncheck it to type your own base-Unique roll instead. Ramaladni's Magnum Opus isn't included here since it only exists as a Mythic (no base-Unique version to toggle from).
+        <b>v8 addition — Mythic Transfiguration toggle:</b> a Unique's special effect is normally a rolled/variable value, but Transfiguring it into its Mythic form fixes that effect to one known, universal number. <b>Any Unique can be Transfigured this way</b> — this isn't limited to a couple of special-cased items, so every plain row below (including ones you add yourself with "+ Add Multiplier") has a "Transfigured to Mythic" checkbox. Where this tool has a sourced fixed value — currently just <b>Gohr's Devastating Grips</b> (82%) and <b>Tuskhelm of Joritz the Mighty</b> (42%) — checking it auto-locks the % to that number. For everything else, checking it swaps the field to a blank "Mythic %" entry for you to type your own tooltip value into, since this tool doesn't have every item's Mythic number memorized. Ramaladni's Magnum Opus doesn't get the checkbox since it only exists as a Mythic — there's no base-Unique version to toggle from. Ring of Starless Skies also doesn't get it, since its row already computes from stack count rather than a flat %; if you've Transfigured it, turn that row off and add a new row instead with your own known Mythic value.
       </div>
       <button class="btn-gold" id="applyKitBtn" type="button" style="margin-bottom:14px;">★ Apply Standard S14 Whirlwind Kit</button>
       <div class="dyn-list" id="multList"></div>
@@ -636,8 +636,8 @@
     {name:"Wrath of the Berserker", pct: 30, on: false},
     {name:"Ramaladni's Magnum Opus", pct: 0, on: true, special:'rmo', maxFury:150, furyPct:0.425},
     {name:"Ring of Starless Skies", pct: 0, on: false, special:'ross', stacks:3},
-    {name:"Gohr's Devastating Grips", pct: 82, on: false, mythicValue: 82, useMythic: true},
-    {name:"Tuskhelm of Joritz the Mighty", pct: 42, on: false, mythicValue: 42, useMythic: true},
+    {name:"Gohr's Devastating Grips", pct: 82, on: false, mythicValue: 82, isMythic: true},
+    {name:"Tuskhelm of Joritz the Mighty", pct: 42, on: false, mythicValue: 42, isMythic: true},
     {name:"Call of the Ancients (unverified, non-default S14)", pct: 10, on: false},
     {name:"Blood Rage (Paragon Legendary node)", pct: 0, on: false, special:'bloodrage'},
     {name:"Decimator (Vulnerable dmg portion only)", pct: 20, on: false},
@@ -657,7 +657,7 @@
 
   // Resolve a mult row's effective pct, computing "special" rows live.
   function resolveMultPct(m){
-    if (m.mythicValue != null && m.useMythic) return m.mythicValue;
+    if (m.isMythic) return m.mythicValue != null ? m.mythicValue : (m.mythicPct||0);
     if (m.special === 'rmo'){
       const maxFury = Math.max(0, m.maxFury||0);
       const furyPct = Math.max(0, m.furyPct||0);
@@ -715,14 +715,19 @@
     return '';
   }
 
-  // A Unique Transfigured into its Mythic form gets a fixed, known value instead
-  // of a rolled/variable one — this toggle switches a row between the two.
+  // ANY Unique can be Transfigured into its Mythic form, which fixes its effect to
+  // one known value instead of a rolled/variable one — available on every plain
+  // (non-special) row, not just the couple this tool happens to have a sourced
+  // number for. "special" rows (RMO/ROSS/Blood Rage) already compute their own way.
   function mythicToggleHTML(m, i){
-    if (m.mythicValue == null) return '';
+    if (m.special) return '';
+    const desc = m.mythicValue != null
+      ? `this row's sourced Mythic value is applied automatically above`
+      : `enter your own Mythic tooltip value in the % field above — this tool doesn't have every item's number memorized`;
     return `<div class="dyn-special">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" ${m.useMythic?'checked':''} data-i="${i}" data-role="mythicToggle">
-        <span>Transfigured to Mythic — auto-use fixed ${m.mythicValue}% <span style="color:var(--bone-dim);">(uncheck to enter your own base-Unique value instead)</span></span>
+        <input type="checkbox" ${m.isMythic?'checked':''} data-i="${i}" data-role="mythicToggle">
+        <span>Transfigured to Mythic <span style="color:var(--bone-dim);">— any Unique can be Transfigured, not just the pre-loaded rows below; when checked, ${desc}.</span></span>
       </label>
     </div>`;
   }
@@ -731,10 +736,14 @@
     const list = $('multList'); list.innerHTML = '';
     mults.forEach((m,i) => {
       const row = document.createElement('div'); row.className = 'dyn-row';
-      const usingMythic = m.mythicValue != null && m.useMythic;
-      const pctFieldHTML = (m.special || usingMythic)
-        ? `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`
-        : `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
+      let pctFieldHTML;
+      if (m.special || (m.isMythic && m.mythicValue != null)){
+        pctFieldHTML = `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`;
+      } else if (m.isMythic){
+        pctFieldHTML = `<div class="pct-wrap"><input type="number" value="${m.mythicPct||0}" data-i="${i}" data-role="mythicPct" step="1" aria-label="${m.name} Mythic percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
+      } else {
+        pctFieldHTML = `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
+      }
       row.innerHTML = `
         <input type="checkbox" ${m.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${m.name} in multiplier total">
         <input type="text" value="${m.name}" data-i="${i}" data-role="name" aria-label="Multiplier name">
@@ -746,8 +755,9 @@
     });
     list.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].on = e.target.checked; compute(); }));
     list.querySelectorAll('[data-role=name]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].name = e.target.value; }));
-    list.querySelectorAll('[data-role=mythicToggle]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].useMythic = e.target.checked; renderMults(); compute(); }));
+    list.querySelectorAll('[data-role=mythicToggle]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].isMythic = e.target.checked; renderMults(); compute(); }));
     list.querySelectorAll('[data-role=pct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].pct = parseFloat(e.target.value)||0; compute(); }));
+    list.querySelectorAll('[data-role=mythicPct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].mythicPct = parseFloat(e.target.value)||0; compute(); }));
     list.querySelectorAll('[data-role=remove]').forEach(el => el.addEventListener('click', e => { mults.splice(+e.target.dataset.i,1); renderMults(); compute(); }));
     list.querySelectorAll('[data-role=rmoFury]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].maxFury = parseFloat(e.target.value)||0; renderMults(); compute(); }));
     list.querySelectorAll('[data-role=rmoPct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].furyPct = parseFloat(e.target.value)||0; renderMults(); compute(); }));
