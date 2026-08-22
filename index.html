@@ -370,9 +370,14 @@
         <b>v6 guide cross-check (Aug 2026):</b> checked against Maxroll's live Season 14 "Death Awakening" Whirlwind endgame guide text (its Equipment/Skills/Paragon/FAQ sections; the interactive gear-planner and Paragon-board widgets on that page render as images/canvas and couldn't be read).
         <ul>
           <li>Confirms <b>Gohr's Devastating Grips, Tuskhelm of Joritz the Mighty, and Ramaladni's Magnum Opus</b> as the standard endgame Mythic/Unique trio, and <b>Wrath of the Berserker</b> as run "on cooldown" for effectively 100% uptime — see the preset button below.</li>
-          <li>Confirms <b>Ring of Starless Skies</b> is currently framed as a Resource/survivability pick rather than a core damage stacker, and <b>Call of the Ancients</b> isn't mentioned at all — both stay off by default, now with more confidence.</li>
           <li>Added <b>Aspect of Anger Management</b> below, off by default: the guide calls it an important damage multiplier and recommends Transfiguring it onto your Amulet, but doesn't give a number — enter your own tooltip value if you use it.</li>
           <li>No numeric values for Paragon legendary nodes were recoverable (widget content, not text) — Section 3's additive rows and the gear-slot affixes in Advanced Mode are still where those belong; enter them from your own board.</li>
+        </ul>
+        <b>v7 correction, from the user's own Maxroll planner screenshots (Aug 2026):</b> the live Equipment tab (not the guide text) shows the actual endgame gear list.
+        <ul>
+          <li><b>Ring of Starless Skies is equipped (Ring slot)</b> in the real loadout — the v6 guess that it was framed as a non-core alternative was wrong. Moved into the preset's "on" list below.</li>
+          <li>Confirmed equipped: <b>Melted Heart of Selig</b> (Amulet, Mythic) with <b>Aspect of Anger Management</b> Transfigured onto it, <b>The Grandfather</b> (Mythic 2H Sword, alternate weapon set), and Legendary Aspects <b>Channeling, Heavy Hitting, Heavenly Strength, Battle-Mad,</b> and <b>Crushing</b> on the remaining weapon/chest/boots/ring slots. None of these have known % values, so they aren't added as new rows — Advanced Mode's gear slot names are pre-filled to match this loadout instead; fill in your own affix values there.</li>
+          <li><b>Melted Heart of Selig requires zero Life on your gear</b> per the guide's own warning — the less Life you have, the less damage you take with this item equipped. Not modeled by this calculator (it doesn't do defense), just flagged so the gear-slot names don't look like an unexplained build choice.</li>
         </ul>
       </div>
       <button class="btn-gold" id="applyKitBtn" type="button" style="margin-bottom:14px;">★ Apply Standard S14 Whirlwind Kit</button>
@@ -408,7 +413,7 @@
 
     <div class="panel">
       <div class="panel-title"><span class="num">*</span>Equipped Gear<span class="line"></span></div>
-      <p class="panel-desc">Open a slot, name the item if you like, and add one row per affix exactly as it reads on the tooltip. Pick the category that matches what the stat actually does — that's what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot below includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board.</p>
+      <p class="panel-desc">Open a slot, name the item if you like, and add one row per affix exactly as it reads on the tooltip. Pick the category that matches what the stat actually does — that's what routes it into the formula correctly. The <b>Base / Skill Tree / Paragon</b> slot below includes a couple of placeholder rows for Glyph and Paragon contributions — edit the values/labels to match your own board. Item names below are pre-filled to match the confirmed Season 14 endgame loadout (see the v7 caveat in Section 4) — rename any slot that doesn't match your own gear, and add each item's actual affixes yourself since no numeric values were available to pre-fill.</p>
       <div id="gearSlots"></div>
     </div>
 
@@ -574,8 +579,8 @@
   ];
 
   // "Standard S14 Whirlwind Kit" preset — see the v6 guide cross-check caveat above.
-  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips","Tuskhelm of Joritz the Mighty"];
-  const STANDARD_KIT_OFF = ["Ring of Starless Skies","Call of the Ancients (unverified, non-default S14)","Blood Rage (Paragon Legendary node)","Decimator (Vulnerable dmg portion only)","Aspect of Anger Management (unverified value)"];
+  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips","Tuskhelm of Joritz the Mighty","Ring of Starless Skies"];
+  const STANDARD_KIT_OFF = ["Call of the Ancients (unverified, non-default S14)","Blood Rage (Paragon Legendary node)","Decimator (Vulnerable dmg portion only)","Aspect of Anger Management (unverified value)"];
   function applyStandardKit(){
     mults.forEach(m => {
       if (STANDARD_KIT_ON.includes(m.name)) m.on = true;
@@ -710,9 +715,26 @@
     {id:'base', label:'Base / Skill Tree / Paragon'},
   ];
 
+  // Pre-filled from the user's own Maxroll Equipment planner screenshots (Aug 2026) —
+  // item/aspect names only, no numeric values (those weren't visible in the screenshots).
+  // See the v7 caveat in the multiplier panel above.
+  const DEFAULT_GEAR_NAMES = {
+    helm: "Tuskhelm of Joritz the Mighty",
+    chest: "Legendary Chest — Aspect of Heavenly Strength",
+    gloves: "Gohr's Devastating Grips",
+    pants: "Tibault's Will",
+    boots: "Legendary Boots — Aspect of Battle-Mad",
+    amulet: "Melted Heart of Selig (+ Aspect of Anger Management, Transfigured — requires 0 Life on gear)",
+    ring1: "Legendary Ring — Aspect of Crushing",
+    ring2: "Ring of Starless Skies",
+    weapon_2h_blunt: "Legendary 2H Mace — Aspect of Channeling",
+    weapon_2h_slash: "The Grandfather (Mythic)",
+    weapon_1h_main: "Ramaladni's Magnum Opus (Mythic)",
+    weapon_1h_off: "Legendary Sword — Aspect of Heavy Hitting",
+  };
   let advGear = {};
   GEAR_SLOTS.forEach(s => {
-    advGear[s.id] = { name:'', affixes: [] };
+    advGear[s.id] = { name: DEFAULT_GEAR_NAMES[s.id]||'', affixes: [] };
     if (s.weapon) Object.assign(advGear[s.id], { wMin: s.id==='weapon_2h_blunt'?620:0, wMax: s.id==='weapon_2h_blunt'?930:0, category: s.defaultCategory });
   });
   advGear.base.affixes = [
