@@ -230,6 +230,40 @@
   .caveat ul{margin:8px 0 0;padding-left:18px;}
   .caveat li{margin-bottom:4px;}
   .version-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);letter-spacing:.08em;text-transform:uppercase;margin-top:8px;}
+
+  /* ---- Beginner guide ---- */
+  .guide-panel{
+    background:linear-gradient(180deg,var(--panel) 0%, var(--iron) 100%);
+    border:1px solid var(--gold);border-radius:2px;margin-bottom:22px;overflow:hidden;
+  }
+  .guide-panel summary{
+    cursor:pointer;list-style:none;padding:15px 20px;display:flex;align-items:center;gap:10px;
+    font-family:'Cinzel',serif;font-weight:700;font-size:14.5px;letter-spacing:.03em;color:var(--gold-bright);
+  }
+  .guide-panel summary::-webkit-details-marker{display:none;}
+  .guide-panel summary::before{content:"▸";color:var(--gold);font-size:12px;transition:transform .15s;}
+  .guide-panel[open] summary::before{transform:rotate(90deg);}
+  .guide-panel summary .tiny{margin-left:auto;font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--steel);text-transform:none;letter-spacing:0;}
+  .guide-body{padding:2px 20px 20px;font-size:13px;line-height:1.7;color:var(--bone-dim);border-top:1px solid var(--hairline);}
+  .guide-body>p{margin:14px 0 0;}
+  .guide-body b{color:var(--gold-bright);font-weight:600;}
+  .guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:14px;}
+  @media(max-width:640px){.guide-grid{grid-template-columns:1fr;}}
+  .guide-item{background:var(--panel-2);border:1px solid var(--hairline);border-radius:2px;padding:11px 13px;}
+  .guide-item .t{color:var(--gold-bright);font-weight:600;font-size:12.5px;margin-bottom:5px;}
+  .guide-item .d{font-size:12px;color:var(--bone-dim);line-height:1.6;}
+
+  /* ---- inline help icon ---- */
+  .qmark{
+    display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
+    border:1px solid var(--steel);color:var(--steel);font-size:9.5px;font-family:'JetBrains Mono',monospace;
+    cursor:help;margin-left:5px;flex:none;line-height:1;
+  }
+  .qmark:hover{border-color:var(--gold);color:var(--gold-bright);}
+  label .label-text{display:inline-flex;align-items:center;}
+
+  .tab-note{text-align:center;font-size:11.5px;color:var(--steel);margin:-14px 0 22px;line-height:1.6;}
+  .tab-note b{color:var(--bone-dim);}
 </style>
 </head>
 <body>
@@ -243,10 +277,37 @@
     <div class="rule"></div>
   </header>
 
+  <details class="guide-panel" open>
+    <summary>🔰 New here? Start with this 60-second guide<span class="tiny">click to collapse</span></summary>
+    <div class="guide-body">
+      <p>This tool estimates your Whirlwind Barbarian's damage per second (DPS) from the numbers on your character screen, skill tooltip, and gear. Fill in <b>Basic Mode</b> below — every field already has a sensible starting value, so you're just correcting the ones that don't match your build. Everything recalculates live as you type; watch the big number at the bottom change.</p>
+      <div class="guide-grid">
+        <div class="guide-item">
+          <div class="t">Where do I find these numbers in-game?</div>
+          <div class="d">Weapon Min/Max Damage and its Attack Speed % are on your weapon's tooltip. Strength is on your Character Screen (default key <b>C</b>), under Attributes. Skill % is on Whirlwind's own tooltip in your skill bar. Crit Chance, Crit Damage %, and Vulnerable Damage % are on the Character Screen under "Offense".</div>
+        </div>
+        <div class="guide-item">
+          <div class="t">Additive vs. Multiplicative — what's the difference?</div>
+          <div class="d"><b>Additive</b> stats (Section 3) add together first: +50% and +30% become one +80% bonus. <b>Multiplicative</b> stats (Section 4, written "x%") each apply as their own separate factor: two +20% multipliers become ×1.2 × ×1.2 = ×1.44, not ×1.40. The game keeps these two buckets separate, so this tool does too — it's the single biggest thing to get right.</div>
+        </div>
+        <div class="guide-item">
+          <div class="t">Crit &amp; Vulnerable, in plain terms</div>
+          <div class="d"><b>Critical Strike</b> is a % chance for a hit to deal bonus damage (a fixed ×1.5 here). <b>Vulnerable</b> is a debuff you put on enemies that makes every hit against them deal bonus damage (a fixed ×1.2). "Vulnerable Uptime" is roughly how much of a fight the enemy is Vulnerable for — 100% if you can keep it up constantly.</div>
+        </div>
+        <div class="guide-item">
+          <div class="t">Don't have every number handy yet?</div>
+          <div class="d">That's fine — every field starts pre-filled with a reasonable value for a mid-to-late-game Whirlwind build. Change only what you know for now and refine the rest later; nothing needs to be perfect to get a useful estimate.</div>
+        </div>
+      </div>
+      <p>Once you're comfortable, <b>Advanced Mode</b> lets you enter every individual affix off every equipped item instead of lump-sum totals — handy for comparing two specific pieces of gear, but not required to get started. Most players should stay in Basic Mode.</p>
+    </div>
+  </details>
+
   <div class="tabs">
     <button class="tab-btn active" id="tabBasic" type="button">Basic Mode</button>
     <button class="tab-btn" id="tabAdvanced" type="button">Advanced Mode — Per-Item Gear</button>
   </div>
+  <p class="tab-note"><b>New to this tool?</b> Stay in Basic Mode — it covers everything most builds need. Advanced Mode is for entering exact per-item affixes, useful once you're comparing specific gear upgrades.</p>
 
   <!-- ================= BASIC MODE ================= -->
   <div class="mode-panel active" id="panelBasic">
@@ -254,18 +315,18 @@
     <div class="panel">
       <div class="panel-title"><span class="num">1</span>Weapon &amp; Skill<span class="line"></span></div>
       <div class="grid cols-3">
-        <div class="field"><label>Weapon Min Dmg</label><input type="number" id="wMin" value="620" min="0"></div>
-        <div class="field"><label>Weapon Max Dmg</label><input type="number" id="wMax" value="930" min="0"></div>
-        <div class="field"><label>Skill % <span class="hint">advanced tooltip</span></label><input type="number" id="skillPct" value="60" step="0.1" min="0"></div>
-        <div class="field"><label>Strength <span class="hint">1% / 10 str</span></label><input type="number" id="strength" value="2500" min="0"></div>
-        <div class="field"><label>Weapon Speed Category</label>
+        <div class="field"><label><span class="label-text">Weapon Min Dmg<span class="qmark" title="Your equipped weapon's tooltip shows &quot;Damage: X - Y&quot; near the top. Enter the lower number here.">?</span></span></label><input type="number" id="wMin" value="620" min="0"></div>
+        <div class="field"><label><span class="label-text">Weapon Max Dmg<span class="qmark" title="Same tooltip as Min Dmg — enter the higher number of the two.">?</span></span></label><input type="number" id="wMax" value="930" min="0"></div>
+        <div class="field"><label><span class="label-text">Skill % <span class="qmark" title="Open your skill bar, hover Whirlwind, and look for the big % in its tooltip (e.g. &quot;Deal 60% weapon damage&quot;). This already includes any skill tree points you've spent.">?</span></span><span class="hint">advanced tooltip</span></label><input type="number" id="skillPct" value="60" step="0.1" min="0"></div>
+        <div class="field"><label><span class="label-text">Strength <span class="qmark" title="Open your Character Screen (default key C) and read the Strength value under Attributes. For Barbarians, every 10 Strength = +1% damage.">?</span></span><span class="hint">1% / 10 str</span></label><input type="number" id="strength" value="2500" min="0"></div>
+        <div class="field"><label><span class="label-text">Weapon Speed Category<span class="qmark" title="Which weapon type Whirlwind is currently using. Two-Handed Blunt/Axe/Polearm hits hardest per swing but swings slowest; Dual-Wield swings fastest. Check your equipped weapon's type on its tooltip.">?</span></span></label>
           <select id="wpCategory">
             <option value="mace">2H Mace / Axe / Polearm</option>
             <option value="sword2h">2H Sword</option>
             <option value="dual">Dual Wield</option>
           </select>
         </div>
-        <div class="field"><label>Total Attack Speed % <span class="hint">Cap 1 + Cap 2 combined</span></label><input type="number" id="asTotal" value="0" step="1" min="0" max="200"></div>
+        <div class="field"><label><span class="label-text">Total Attack Speed % <span class="qmark" title="Add up every &quot;Attack Speed&quot; % bonus from your gear, paragon board, and buffs, then type the total here. This decides how many times per second Whirlwind actually hits — see the readout below.">?</span></span><span class="hint">Cap 1 + Cap 2 combined</span></label><input type="number" id="asTotal" value="0" step="1" min="0" max="200"></div>
       </div>
       <div class="subtotal"><span>Whirlwind APS — Season 14 frame breakpoint</span><b id="apsOut">0.900 (26f)</b></div>
     </div>
@@ -274,16 +335,16 @@
       <div class="panel-title"><span class="num">2</span>Critical Strike &amp; Vulnerable<span class="line"></span></div>
       <p class="panel-desc">Always enter the <b>bottom</b> tooltip number for Crit Damage and Vulnerable Damage — the top number already bakes in the fixed multiplier this tool applies separately.</p>
       <div class="grid">
-        <div class="field"><label>Critical Strike Chance <span class="hint">fixed ×1.5 on crit</span></label><div class="slider-row"><input type="range" id="critChance" min="0" max="100" value="85" step="1"><span class="slider-val" id="critChanceVal">85%</span></div></div>
-        <div class="field"><label>Vulnerable Uptime <span class="hint">fixed ×1.2 while vuln</span></label><div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="vulnUptimeVal">90%</span></div></div>
-        <div class="field"><label>Critical Strike Damage % <span class="hint">bottom value</span></label><input type="number" id="critDmgAdd" value="410" min="0"></div>
-        <div class="field"><label>Vulnerable Damage % <span class="hint">bottom value</span></label><input type="number" id="vulnDmgAdd" value="450" min="0"></div>
+        <div class="field"><label><span class="label-text">Critical Strike Chance <span class="qmark" title="Your % chance for a hit to be a Critical Strike, dealing bonus damage. Found on your Character Screen under Offense.">?</span></span><span class="hint">fixed ×1.5 on crit</span></label><div class="slider-row"><input type="range" id="critChance" min="0" max="100" value="85" step="1"><span class="slider-val" id="critChanceVal">85%</span></div></div>
+        <div class="field"><label><span class="label-text">Vulnerable Uptime <span class="qmark" title="Roughly what % of a fight you can keep enemies afflicted with Vulnerable. If your build applies it constantly (e.g. via Rend or a Vulnerable-on-hit source), 90-100% is realistic.">?</span></span><span class="hint">fixed ×1.2 while vuln</span></label><div class="slider-row"><input type="range" id="vulnUptime" min="0" max="100" value="90" step="1"><span class="slider-val" id="vulnUptimeVal">90%</span></div></div>
+        <div class="field"><label><span class="label-text">Critical Strike Damage % <span class="qmark" title="On the Character Screen this stat shows two numbers, e.g. &quot;50% [410%]&quot;. Always enter the bottom/bracketed number — the top number is the base 50% this tool already applies separately as the fixed ×1.5.">?</span></span><span class="hint">bottom value</span></label><input type="number" id="critDmgAdd" value="410" min="0"></div>
+        <div class="field"><label><span class="label-text">Vulnerable Damage % <span class="qmark" title="Same idea as Crit Damage — enter the bottom/bracketed tooltip number, not the top one. The top number's base 20% is already applied separately as the fixed ×1.2.">?</span></span><span class="hint">bottom value</span></label><input type="number" id="vulnDmgAdd" value="450" min="0"></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-title"><span class="num">3</span>Additive Damage Bucket<span class="line"></span></div>
-      <p class="panel-desc">Every stat relevant to Whirlwind Barbarian, pre-loaded. <b>Check on</b> whatever you actually have on your gear — unchecked rows are ignored but stay handy for later. Add anything missing at the bottom.</p>
+      <p class="panel-desc">Every stat relevant to Whirlwind Barbarian, pre-loaded. <b>Check on</b> whatever you actually have on your gear — unchecked rows are ignored but stay handy for later. Add anything missing at the bottom. These stats <b>add together</b> before anything else applies — e.g. turning on a +50% row and a +30% row gives one +80% bonus, never ×1.5 × ×1.3.</p>
       <div class="dyn-list" id="addList"></div>
       <button class="add-row" id="addAddBtn" type="button">+ Add Additive Stat</button>
       <div class="subtotal"><span>Additive bucket total (checked only)</span><b id="addTotal">+0%</b></div>
@@ -351,7 +412,7 @@
   <div class="results">
     <div class="eyebrow">Output</div>
     <div class="headline" id="dpsOut">0</div>
-    <div class="headline-label">Damage Per Second (unmitigated)</div>
+    <div class="headline-label">Damage Per Second (unmitigated) <span class="qmark" title="This is your raw output before the enemy's own damage reduction (armor, resistances, level scaling) is subtracted. It's the best number to compare two builds against each other — for an estimate of damage against a specific enemy, use the DR toggle below.">?</span></div>
     <div class="result-strip">
       <div class="result-cell"><div class="v" id="avgHitOut">0</div><div class="l">Avg Hit</div></div>
       <div class="result-cell"><div class="v" id="nonCritOut">0</div><div class="l">No Crit / No Vuln</div></div>
@@ -365,7 +426,7 @@
       <div class="bk-row"><div class="bk-top"><span class="name">Crit · Vulnerable</span><span class="val" id="p-cv">0%</span></div><div class="bk-bar"><div class="bk-fill cv" id="bar-cv" style="width:0%"></div></div></div>
     </div>
     <div class="dr-row">
-      <label><input type="checkbox" id="drEnabled"> Show Enemy Damage Reduction (off by default — unmitigated DPS above is the primary number)</label>
+      <label><input type="checkbox" id="drEnabled"> Show Enemy Damage Reduction <span class="qmark" title="Optional: enemies mitigate a % of incoming damage (their own armor/resist/level, shown as &quot;DR&quot; in build guides). Enable this to see an estimated after-mitigation number for a specific target. It's off by default because the unmitigated DPS above is the fairer number for comparing your own gear choices.">?</span> (off by default — unmitigated DPS above is the primary number)</label>
       <input type="number" id="drPct" value="85" min="0" max="99" step="0.1"> <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">% DR</span>
     </div>
     <div class="dr-mitigated" id="drOut" style="display:none;"></div>
