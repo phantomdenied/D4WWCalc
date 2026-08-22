@@ -293,9 +293,9 @@
             <div class="hint">Arsenal assignment. Sets weapon damage + speed class.</div>
           </div>
           <div class="field">
-            <label for="strPer10">Strength per 1% damage <span class="prov prov-unverified" title="Sources conflict on the current coefficient — see Data confidence."></span></label>
-            <input type="number" id="strPer10" min="1" step="0.5" value="10">
-            <div class="hint">Verify against your sheet. 10, 12.5, and 8 are all reported by different sources — see Data confidence.</div>
+            <label for="strPer10">Strength per 1% damage <span class="prov prov-game" title="Maxroll's live Barbarian-specific stats page, checked 2026-08-22 — see Data confidence."></span></label>
+            <input type="number" id="strPer10" min="1" step="0.01" value="9.09">
+            <div class="hint">Maxroll (live, Barbarian-specific): +0.11% Skill Damage per point of Strength = 9.09 Strength per 1%. Older/generic sources say 10 or 12.5 — see Data confidence.</div>
           </div>
         </div>
       </div>
@@ -454,7 +454,8 @@
       <p style="margin:0 0 9px;"><strong>Fixed this pass.</strong> A Unique/Mythic item's power used to live in a separate Multipliers row with no connection to whether the item was actually equipped — equipping Ramaladni's Magnum Opus or Ring of Starless Skies on a gear slot did nothing unless you separately found and enabled a same-named row elsewhere, and the shipped sample build itself demonstrated this (both were "equipped" but contributed zero damage). Each known Unique/Mythic power now lives directly on its gear slot's editor — selecting it there is what applies it, and its live value is shown on the paperdoll slot itself. A second bug was fixed alongside it: loading the sample build handed out live references to its arrays/objects, so editing a loaded sample would silently corrupt the built-in sample for the rest of the session.</p>
       <p style="margin:0 0 9px;"><strong>Verified this pass.</strong> Ramaladni's Magnum Opus was checked against its live tooltip (fextralife, 2026-08-22): "Skills using this weapon deal [0.35–0.50]% increased damage per point of Fury you have, but you lose 10 Fury every second." The engine's <code>maxFury × %perFury</code> formula matches; the two inputs now default to the midpoint of the confirmed roll range and are clamped to it. The Fury-drain clause isn't modeled as a rotational mechanic — "Max Fury" is still a static stand-in for sustained Fury, same simplification as before, just now on a confirmed base number. Ring of Starless Skies was also checked (same source, same date): "Spending your Primary Resource ... increases your damage by 10% for 3 seconds, up to 50%" — matches the existing 10%/stack, 0–5 stacks, 50%-cap formula exactly, no change needed. Gohr's Devastating Grips ("Whirlwind deals [75–90%] increased damage") and Tuskhelm of Joritz the Mighty ("...granting [40–50%] increased damage...") were previously hardcoded flat guesses (82% and 42%) — both are actually roll ranges, so they're now user-adjustable within the confirmed range instead of fixed, same pattern as Ramaladni's. Berserking's own tooltip ("Increases your damage by 25% and your movement speed by 30%") also matches the existing 25% exactly. The three Aspects that previously had no trustworthy value at all are now confirmed and default to their roll midpoint: Aspect of Channeling <code>[50–70]%</code> while channeling a skill (Whirlwind qualifies), Aspect of Anger Management <code>[15.0–20.0]%</code> while above 50 Fury, and Crushing Aspect (listed here as "Aspect of Crushing") <code>[45–65]%</code> while Fortified. None of these three model the extra <code>+50%</code>/<code>+100%</code> potency an Aspect gets on an Amulet or Two-Handed Weapon slot — adjust the number by hand if that's where you have it socketed.</p>
       <p style="margin:0 0 9px;"><strong>Flagged this pass, not fixed with a guess.</strong> Wrath of the Berserker previously carried a flat +30% damage value, but its live tooltip ("Explode into rage, Knocking Back surrounding enemies while gaining Berserking and Unstoppable for 10 seconds") shows no separate damage bonus of its own — it just grants the Berserking status, which is already its own toggle above. Toggling both on, as the sample build did, may have been double-counting one real bonus as two. Rather than invent a replacement number, it's been zeroed and marked <i class="prov prov-unverified"></i> — confirm from your own character sheet whether WotB grants anything beyond Berserking before re-enabling it.</p>
-      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> The Strength coefficient is genuinely contested, and this pass made it worse rather than better: the older Fextralife stat page and Game8 both say <code>10 Strength = 1%</code> damage (i.e. <code>+0.1%</code> per point), one community figure says <code>12.5 Strength = 1%</code> (<code>+0.08%</code> per point), and Maxroll's beginner stats guide says <code>+0.125%</code> per point — a third value, <code>8 Strength = 1%</code>. Three different numbers from sources of varying recency, none clearly authoritative for the current season. It stays exposed as a user-editable input rather than hardcoded for exactly this reason. Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
+      <p style="margin:0 0 9px;"><strong>Resolved this pass, with history kept visible.</strong> The Strength coefficient looked contested because most sources report a generic, non-class-specific number. Maxroll's live Stats for Beginners page breaks it out per class: Barbarian specifically gets <code>+0.11%</code> Skill Damage per point of Strength (<code>9.09</code> Strength per 1%) — different from Druid/Paladin/Sorcerer/Necromancer/Spiritborn, which get <code>+0.125%</code> (<code>8</code> per 1%). That 0.125%/8 figure is almost certainly what earlier passes (and a naive Google summary) picked up and wrongly generalized to Barbarian. The older Fextralife stat page (last touched 2024) and Game8 both round to <code>10 Strength = 1%</code> (<code>+0.1%</code>/point) — close to Maxroll's number but not exact, and older. Default is now Maxroll's Barbarian-specific <code>9.09</code>, <span class="prov prov-game"></span>, still a plain input if your own sheet disagrees.</p>
+      <p style="margin:0 0 9px;"><strong>Not verified — treat with suspicion.</strong> Rows marked <i class="prov prov-unverified"></i> have no trustworthy number at all and default to 0.</p>
       <p style="margin:0;"><strong>Why not more.</strong> This build ran without network access to Diablo databases and build-planner sites, so per-item affix values, Paragon node values, and glyph scaling could not be pulled. Anything item-specific has to come off your own character sheet. Nothing here is invented to fill a gap — where a number is unknown it is 0 and flagged.</p>
     </div>
   </div>
@@ -666,7 +667,7 @@ function resolveGearPower(p){
 
 // Sample build - clearly a sample, loadable/clearable, not presented as truth.
 const SAMPLE = {
-  skillPct:60, strPer10:10, activeWeapon:'w2h_blunt', vulnUptime:90, target:'elite',
+  skillPct:60, strPer10:9.09, activeWeapon:'w2h_blunt', vulnUptime:90, target:'elite',
   conds:{berserk:true, fortified:true, healthy:true, cc:false, injured:false},
   stats:{physical:500, core:0, whirlwind:0, close:350, berserk:300, critDmg:410, vulnDmg:450,
          elite:0, boss:0, cc:0, injured:0, fortified:0, healthy:0},
@@ -702,7 +703,7 @@ function blankStats(){
 }
 function blankBuild(){
   return {
-    skillPct:60, strPer10:10, activeWeapon:'w2h_blunt',
+    skillPct:60, strPer10:9.09, activeWeapon:'w2h_blunt',
     vulnUptime:90, target:'normal',
     conds:{berserk:false, fortified:false, healthy:false, cc:false, injured:false},
     strength:0, critChance:0, as1:0, as2:0,
@@ -815,7 +816,7 @@ function computeDamage(b){
   const multProduct = activeMults.reduce((p, m) => p * (1 + m.pct/100), 1);
 
   // --- strength: its own multiplicative bucket ---
-  const strPer10 = Math.max(0.1, num(b.strPer10) || 10);
+  const strPer10 = Math.max(0.1, num(b.strPer10) || 9.09);
   const strMult = 1 + (t.strength / (strPer10 * 100));
 
   // --- additive bucket, split by when it applies ---
