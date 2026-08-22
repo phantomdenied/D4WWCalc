@@ -134,6 +134,8 @@
   .gear-slot summary .slot-sub{font-family:'Inter';font-weight:400;font-size:11.5px;color:var(--bone-dim);margin-left:auto;text-transform:none;letter-spacing:0;}
   .gear-slot-body{padding:4px 16px 16px;border-top:1px solid var(--hairline);}
   .gear-name-field{margin:12px 0 14px;}
+  .gear-mythic-field{margin:0 0 14px;font-size:12.5px;color:var(--bone);}
+  .gear-mythic-field .hint{display:block;margin-top:2px;}
   .weapon-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
   @media(max-width:600px){.weapon-fields{grid-template-columns:1fr 1fr;}}
 
@@ -420,7 +422,7 @@
           <li>Confirmed equipped: <b>Melted Heart of Selig</b> (Amulet, Mythic) with <b>Aspect of Anger Management</b> Transfigured onto it, <b>The Grandfather</b> (Mythic 2H Sword, alternate weapon set), and Legendary Aspects <b>Channeling, Heavy Hitting, Heavenly Strength, Battle-Mad,</b> and <b>Crushing</b> on the remaining weapon/chest/boots/ring slots. None of these have known % values, so they aren't added as new rows — Advanced Mode's gear slot names are pre-filled to match this loadout instead; fill in your own affix values there.</li>
           <li><b>Melted Heart of Selig requires zero Life on your gear</b> per the guide's own warning — the less Life you have, the less damage you take with this item equipped. Not modeled by this calculator (it doesn't do defense), just flagged so the gear-slot names don't look like an unexplained build choice.</li>
         </ul>
-        <b>v8 addition — Mythic Transfiguration toggle:</b> a Unique's special effect is normally a rolled/variable value, but Transfiguring it into its Mythic form fixes that effect to one known, universal number. <b>Any Unique can be Transfigured this way</b> — this isn't limited to a couple of special-cased items, so every plain row below (including ones you add yourself with "+ Add Multiplier") has a "Transfigured to Mythic" checkbox. Where this tool has a sourced fixed value — currently just <b>Gohr's Devastating Grips</b> (82%) and <b>Tuskhelm of Joritz the Mighty</b> (42%) — checking it auto-locks the % to that number. For everything else, checking it swaps the field to a blank "Mythic %" entry for you to type your own tooltip value into, since this tool doesn't have every item's Mythic number memorized. Ramaladni's Magnum Opus doesn't get the checkbox since it only exists as a Mythic — there's no base-Unique version to toggle from. Ring of Starless Skies also doesn't get it, since its row already computes from stack count rather than a flat %; if you've Transfigured it, turn that row off and add a new row instead with your own known Mythic value.
+        <b>v9 correction — Mythic Transfiguration:</b> only <b>Unique items</b> can be Transfigured into their Mythic form — not skills, so an earlier pass here that put a "Transfigured to Mythic" checkbox on every row (including Berserking and Wrath of the Berserker) was wrong and has been removed. This section is a flat list of named multipliers, not individual items, so it isn't the right place for that toggle at all. <b>Gohr's Devastating Grips</b> and <b>Tuskhelm of Joritz the Mighty</b> below are simple flat numbers again — already set to their sourced Mythic value (82% / 42%), same as before this ever became a checkbox. The actual per-item Transfiguration toggle now lives in <b>Advanced Mode's Equipped Gear</b> section, next to each item slot's name — that's the part of this tool that deals with individual items.
       </div>
       <button class="btn-gold" id="applyKitBtn" type="button" style="margin-bottom:14px;">★ Apply Standard S14 Whirlwind Kit</button>
       <div class="dyn-list" id="multList"></div>
@@ -636,8 +638,8 @@
     {name:"Wrath of the Berserker", pct: 30, on: false},
     {name:"Ramaladni's Magnum Opus", pct: 0, on: true, special:'rmo', maxFury:150, furyPct:0.425},
     {name:"Ring of Starless Skies", pct: 0, on: false, special:'ross', stacks:3},
-    {name:"Gohr's Devastating Grips", pct: 82, on: false, mythicValue: 82, isMythic: true},
-    {name:"Tuskhelm of Joritz the Mighty", pct: 42, on: false, mythicValue: 42, isMythic: true},
+    {name:"Gohr's Devastating Grips (Mythic value)", pct: 82, on: false},
+    {name:"Tuskhelm of Joritz the Mighty (Mythic value)", pct: 42, on: false},
     {name:"Call of the Ancients (unverified, non-default S14)", pct: 10, on: false},
     {name:"Blood Rage (Paragon Legendary node)", pct: 0, on: false, special:'bloodrage'},
     {name:"Decimator (Vulnerable dmg portion only)", pct: 20, on: false},
@@ -645,7 +647,7 @@
   ];
 
   // "Standard S14 Whirlwind Kit" preset — see the v6 guide cross-check caveat above.
-  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips","Tuskhelm of Joritz the Mighty","Ring of Starless Skies"];
+  const STANDARD_KIT_ON = ["Berserking","Wrath of the Berserker","Ramaladni's Magnum Opus","Gohr's Devastating Grips (Mythic value)","Tuskhelm of Joritz the Mighty (Mythic value)","Ring of Starless Skies"];
   const STANDARD_KIT_OFF = ["Call of the Ancients (unverified, non-default S14)","Blood Rage (Paragon Legendary node)","Decimator (Vulnerable dmg portion only)","Aspect of Anger Management (unverified value)"];
   function applyStandardKit(){
     mults.forEach(m => {
@@ -657,7 +659,6 @@
 
   // Resolve a mult row's effective pct, computing "special" rows live.
   function resolveMultPct(m){
-    if (m.isMythic) return m.mythicValue != null ? m.mythicValue : (m.mythicPct||0);
     if (m.special === 'rmo'){
       const maxFury = Math.max(0, m.maxFury||0);
       const furyPct = Math.max(0, m.furyPct||0);
@@ -715,49 +716,24 @@
     return '';
   }
 
-  // ANY Unique can be Transfigured into its Mythic form, which fixes its effect to
-  // one known value instead of a rolled/variable one — available on every plain
-  // (non-special) row, not just the couple this tool happens to have a sourced
-  // number for. "special" rows (RMO/ROSS/Blood Rage) already compute their own way.
-  function mythicToggleHTML(m, i){
-    if (m.special) return '';
-    const desc = m.mythicValue != null
-      ? `this row's sourced Mythic value is applied automatically above`
-      : `enter your own Mythic tooltip value in the % field above — this tool doesn't have every item's number memorized`;
-    return `<div class="dyn-special">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" ${m.isMythic?'checked':''} data-i="${i}" data-role="mythicToggle">
-        <span>Transfigured to Mythic <span style="color:var(--bone-dim);">— any Unique can be Transfigured, not just the pre-loaded rows below; when checked, ${desc}.</span></span>
-      </label>
-    </div>`;
-  }
-
   function renderMults(){
     const list = $('multList'); list.innerHTML = '';
     mults.forEach((m,i) => {
       const row = document.createElement('div'); row.className = 'dyn-row';
-      let pctFieldHTML;
-      if (m.special || (m.isMythic && m.mythicValue != null)){
-        pctFieldHTML = `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`;
-      } else if (m.isMythic){
-        pctFieldHTML = `<div class="pct-wrap"><input type="number" value="${m.mythicPct||0}" data-i="${i}" data-role="mythicPct" step="1" aria-label="${m.name} Mythic percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
-      } else {
-        pctFieldHTML = `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
-      }
+      const pctFieldHTML = m.special
+        ? `<div class="pct-wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold-bright);padding:6px 0;">${resolveMultPct(m).toFixed(1)}%</span></div>`
+        : `<div class="pct-wrap"><input type="number" value="${m.pct}" data-i="${i}" data-role="pct" step="1" aria-label="${m.name} percent"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bone-dim);">%</span></div>`;
       row.innerHTML = `
         <input type="checkbox" ${m.on?'checked':''} data-i="${i}" data-role="on" aria-label="Include ${m.name} in multiplier total">
         <input type="text" value="${m.name}" data-i="${i}" data-role="name" aria-label="Multiplier name">
         ${pctFieldHTML}
         <button class="dyn-remove" data-i="${i}" data-role="remove" type="button" aria-label="Remove ${m.name}">✕</button>
-        ${multSpecialHTML(m, i)}
-        ${mythicToggleHTML(m, i)}`;
+        ${multSpecialHTML(m, i)}`;
       list.appendChild(row);
     });
     list.querySelectorAll('[data-role=on]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].on = e.target.checked; compute(); }));
     list.querySelectorAll('[data-role=name]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].name = e.target.value; }));
-    list.querySelectorAll('[data-role=mythicToggle]').forEach(el => el.addEventListener('change', e => { mults[+e.target.dataset.i].isMythic = e.target.checked; renderMults(); compute(); }));
     list.querySelectorAll('[data-role=pct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].pct = parseFloat(e.target.value)||0; compute(); }));
-    list.querySelectorAll('[data-role=mythicPct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].mythicPct = parseFloat(e.target.value)||0; compute(); }));
     list.querySelectorAll('[data-role=remove]').forEach(el => el.addEventListener('click', e => { mults.splice(+e.target.dataset.i,1); renderMults(); compute(); }));
     list.querySelectorAll('[data-role=rmoFury]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].maxFury = parseFloat(e.target.value)||0; renderMults(); compute(); }));
     list.querySelectorAll('[data-role=rmoPct]').forEach(el => el.addEventListener('input', e => { mults[+e.target.dataset.i].furyPct = parseFloat(e.target.value)||0; renderMults(); compute(); }));
@@ -824,9 +800,13 @@
     weapon_1h_main: "Ramaladni's Magnum Opus (Mythic)",
     weapon_1h_off: "Legendary Sword — Aspect of Heavy Hitting",
   };
+  // Which pre-filled slots are confirmed Mythic Uniques per the user's own Equipment
+  // screenshots — Ring of Starless Skies' rarity tag was cut off in that screenshot,
+  // so it defaults to not-Mythic rather than assume.
+  const DEFAULT_GEAR_MYTHIC = { helm:true, gloves:true, pants:true, amulet:true, weapon_2h_slash:true, weapon_1h_main:true };
   let advGear = {};
   GEAR_SLOTS.forEach(s => {
-    advGear[s.id] = { name: DEFAULT_GEAR_NAMES[s.id]||'', affixes: [] };
+    advGear[s.id] = { name: DEFAULT_GEAR_NAMES[s.id]||'', affixes: [], isMythic: !!DEFAULT_GEAR_MYTHIC[s.id] };
     if (s.weapon) Object.assign(advGear[s.id], { wMin: s.id==='weapon_2h_blunt'?620:0, wMax: s.id==='weapon_2h_blunt'?930:0, category: s.defaultCategory });
   });
   advGear.base.affixes = [
@@ -852,7 +832,7 @@
   function pdSlotHTML(slotId, iconText, labelText, extraClass){
     const g = advGear[slotId];
     const name = g.name || '';
-    const rarity = !name.trim() ? 'rarity-empty' : (/mythic/i.test(name) ? 'rarity-mythic' : 'rarity-item');
+    const rarity = !name.trim() ? 'rarity-empty' : (g.isMythic ? 'rarity-mythic' : 'rarity-item');
     const activeCount = g.affixes.filter(a=>a.on).length;
     const countBadge = activeCount ? `<div class="pd-count">${activeCount}</div>` : '';
     const ariaLabel = `${labelText}: ${name || 'empty'}${activeCount ? ', ' + activeCount + ' active affix' + (activeCount===1?'':'es') : ''} — click to edit`;
@@ -921,10 +901,21 @@
           </div>
         </div>` : '';
 
+      // Only actual items get this — Unique items are what can be Transfigured to
+      // Mythic, not skills, so this lives here (per-item) and nowhere else.
+      const mythicFieldHTML = slot.id !== 'base' ? `
+        <div class="field gear-mythic-field">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" ${g.isMythic?'checked':''} data-slot="${slot.id}" data-role="itemMythic">
+            <span>Transfigured to Mythic <span class="hint">(only Unique items can be — sets this slot's rarity color on the paperdoll above)</span></span>
+          </label>
+        </div>` : '';
+
       det.innerHTML = `
         <summary>${slot.label}<span class="slot-sub">${g.name || 'unnamed'} · ${g.affixes.filter(a=>a.on).length} active</span></summary>
         <div class="gear-slot-body">
           <div class="field gear-name-field"><label for="itemname-${slot.id}">Item Name <span class="hint">optional</span></label><input type="text" id="itemname-${slot.id}" data-slot="${slot.id}" data-role="itemname" value="${g.name}" placeholder="e.g. Ramaladni's Magnum Opus"></div>
+          ${mythicFieldHTML}
           ${weaponFieldsHTML}
           <div class="dyn-list">${affixHTML}</div>
           <button class="add-affix" data-slot="${slot.id}" data-role="addaffix" type="button">+ Add Affix</button>
@@ -937,6 +928,10 @@
       advGear[slotId].name = e.target.value;
       const sub = e.target.closest('.gear-slot')?.querySelector('.slot-sub');
       if (sub) sub.textContent = `${advGear[slotId].name || 'unnamed'} · ${advGear[slotId].affixes.filter(a=>a.on).length} active`;
+      renderPaperdoll();
+    }));
+    wrap.querySelectorAll('[data-role=itemMythic]').forEach(el => el.addEventListener('change', e => {
+      advGear[e.target.dataset.slot].isMythic = e.target.checked;
       renderPaperdoll();
     }));
     wrap.querySelectorAll('[data-role=wMin]').forEach(el => el.addEventListener('input', e => { advGear[e.target.dataset.slot].wMin = Math.max(0, parseFloat(e.target.value)||0); compute(); }));
